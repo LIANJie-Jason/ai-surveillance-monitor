@@ -1,4 +1,4 @@
-# AI Surveillance & Censorship News Monitor
+# AI-powered Surveillance & Censorship Monitor
 
 **A real-time command center that tracks global surveillance and censorship using AI-powered news analysis.**
 
@@ -184,7 +184,7 @@ If you use this software in your research, please cite:
 ```bibtex
 @software{lian2026surveillance,
   author       = {Lian, Jie},
-  title        = {{AI Surveillance \& Censorship News Monitor}},
+  title        = {{AI-powered Surveillance \& Censorship Monitor}},
   year         = {2026},
   url          = {https://github.com/LIANJie-Jason/ai-surveillance-monitor},
   note         = {Research prototype for NSF grant demonstration}

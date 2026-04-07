@@ -1,4 +1,4 @@
-"""AI Surveillance News Monitor — Single-window command center dashboard.
+"""AI-powered Surveillance & Censorship Monitor — Single-window command center dashboard.
 
 Wires together all dashboard components: globe (always visible), analysis
 panel, live streams, webcams, and news feed in a tight WorldMonitor-style
@@ -287,7 +287,7 @@ def _render_sidebar(db: Database) -> dict[str, Any]:
         country = parse_country_option(country_raw)
 
         st.markdown("---")
-        st.caption("AI Surveillance News Monitor")
+        st.caption("AI-powered Surveillance & Censorship Monitor")
 
     return build_filter_params(
         country=country,
@@ -305,7 +305,7 @@ def _render_title_bar() -> None:
         'padding:4px 0;border-bottom:1px solid #30363d;margin-bottom:6px;">'
         '<span style="color:#e6edf3;font-size:16px;font-weight:700;'
         'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;">'
-        'AI Surveillance &amp; Censorship Monitor</span>'
+        'AI-powered Surveillance &amp; Censorship Monitor</span>'
         '<span style="background:#f85149;color:#fff;padding:2px 8px;'
         'border-radius:3px;font-size:10px;font-weight:600;">LIVE</span>'
         '</div>',
@@ -361,7 +361,7 @@ def _render_feed_and_detail(
 def main() -> None:
     """Main dashboard entry point — single-window command center."""
     st.set_page_config(
-        page_title="AI Surveillance Monitor",
+        page_title="AI-powered Surveillance & Censorship Monitor",
         layout="wide",
         initial_sidebar_state="collapsed",
     )

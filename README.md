@@ -2,7 +2,7 @@
 
 **A real-time command center that tracks global surveillance and censorship using AI-powered news analysis.**
 
-Built as a demonstration tool for an NSF research grant on computational repression, this prototype ingests RSS feeds from 64 news sources, classifies articles with LLMs, and renders a live dashboard with a 3D rotating globe, country-level drill-downs, embedded news streams, and AI-generated article summaries.
+This prototype monitors 4 designated countries — **India, Malaysia, Nigeria, and South Africa** — with plans to expand to full global coverage. It ingests RSS feeds from 64 news sources, classifies articles with LLMs, and renders a live dashboard with a 3D rotating globe, country-level drill-downs, embedded news streams, and AI-generated article summaries.
 
 ![Demo](graphs/demo.gif)
 
@@ -10,7 +10,7 @@ Built as a demonstration tool for an NSF research grant on computational repress
 
 ## What It Does
 
-The monitor continuously scans news from wire services, major outlets, digital rights organizations, and regional sources across 4 focus countries — **India, Malaysia, Nigeria, and South Africa** — to detect and categorize surveillance and censorship activity in near real-time.
+The monitor continuously scans news from wire services, major outlets, digital rights organizations, and regional sources to detect and categorize surveillance and censorship activity in near real-time. The current prototype focuses on 4 countries, with the architecture designed to scale to global coverage.
 
 **8 categories tracked:** surveillance, censorship, facial recognition, internet shutdowns, data collection, social media control, digital rights, other
 
@@ -181,11 +181,11 @@ python -m pytest tests/ -q     # 695 tests across 25 test files
 | `config/webcams.yaml` | City webcam URLs |
 | `.env` | API keys (OpenAI, Anthropic, YouTube) |
 
-## Design Documents
+## Roadmap
 
-- `docs/plans/2026-03-31-surveillance-monitor-design.md` — full system design
-- `docs/plans/2026-03-31-surveillance-monitor-implementation.md` — implementation plan
-- `docs/cowork_log.md` — session-by-session build log
+- **Global expansion** — extend country coverage beyond the current 4 focus countries to full global monitoring
+- **GDELT integration** — supplement RSS feeds with GDELT event data for broader coverage
+- **Streaming responses** — real-time LLM output for article summaries
 
 ## Citation
 
@@ -197,7 +197,6 @@ If you use this software in your research, please cite:
   title        = {{AI-powered Surveillance \& Censorship Monitor}},
   year         = {2026},
   url          = {https://github.com/LIANJie-Jason/ai-surveillance-monitor},
-  note         = {Research prototype for NSF grant demonstration}
 }
 ```
 
@@ -205,4 +204,4 @@ GitHub also provides a "Cite this repository" button via the [`CITATION.cff`](CI
 
 ## License
 
-Research prototype. Built for NSF grant demonstration purposes.
+MIT

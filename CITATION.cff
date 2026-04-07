@@ -10,11 +10,13 @@ authors:
 url: "https://github.com/LIANJie-Jason/ai-surveillance-monitor"
 repository-code: "https://github.com/LIANJie-Jason/ai-surveillance-monitor"
 abstract: >-
-  A real-time command center that tracks global surveillance and censorship
-  using AI-powered news analysis. Ingests RSS feeds from 64 sources,
-  classifies articles with LLMs, and renders a live dashboard with a 3D
-  rotating globe, country-level drill-downs, embedded news streams, and
-  AI-generated article summaries.
+  A real-time command center that tracks surveillance and censorship
+  using AI-powered news analysis. Currently monitors 4 focus countries
+  (India, Malaysia, Nigeria, South Africa) with plans to expand to full
+  global coverage. Ingests RSS feeds from 64 sources, classifies articles
+  with LLMs, and renders a live dashboard with a 3D rotating globe,
+  country-level drill-downs, embedded news streams, and AI-generated
+  article summaries.
 keywords:
   - surveillance
   - censorship

@@ -1,59 +1,53 @@
 # Live news streams (YouTube Live) for drill-down countries
-# Channel IDs sourced from official YouTube channels
-# Lines marked # VERIFY need confirmation in Task 14 (URL research)
+# Using direct /embed/<VIDEO_ID> URLs (video IDs verified live 2026-04-07)
+# Video IDs may rotate when channels restart streams — update as needed
+# or re-enable YouTube Data API resolver when quota resets
 
 streams:
   IN:
     name: "NDTV 24x7"
-    embed_url: "https://www.youtube.com/embed/live_stream?channel=UCwm3CPHM4bQup8sYMgLYGOw"
-    # HTTP-200 verified 2026-04-06; visual verification pending
+    embed_url: "https://www.youtube.com/embed/yQRoSKQZNJ4"
     language: "en"
     description: "India's leading English-language 24-hour news channel"
 
   MY:
     name: "Astro Awani"
-    embed_url: "https://www.youtube.com/embed/live_stream?channel=UCk_UfPnSJVkdL0lFJElsnNQ"
-    # HTTP-200 verified 2026-04-06; visual verification pending
+    embed_url: "https://www.youtube.com/embed/mkVyNaGee8A"
     language: "ms"
     description: "Malaysia's 24-hour Malay-language news channel"
 
   NG:
     name: "Channels TV"
-    embed_url: "https://www.youtube.com/embed/live_stream?channel=UCuEuVMJbqljmjNSn_RPOLNQ"
-    # HTTP-200 verified 2026-04-06; visual verification pending
+    embed_url: "https://www.youtube.com/embed/d4zDorDl5UE"
     language: "en"
     description: "Nigeria's leading independent news broadcaster"
 
   ZA:
-    name: "eNCA"
-    embed_url: "https://www.youtube.com/embed/live_stream?channel=UCDGkUGMkOxuMe2HUfVFyGGA"
-    # HTTP-200 verified 2026-04-06; visual verification pending
+    name: "africanews"
+    embed_url: "https://www.youtube.com/embed/NQjabLGdP5g"
     language: "en"
-    description: "South Africa's 24-hour English-language news channel"
+    description: "Pan-African 24/7 English-language news (Euronews group)"
 
 # Fallback streams (if primary is offline or geo-restricted)
 fallbacks:
   IN:
     name: "India Today"
-    embed_url: "https://www.youtube.com/embed/live_stream?channel=UCYPvAwZP8pZhSMW8qs7cVCw"
-    # HTTP-200 verified 2026-04-06; visual verification pending
+    embed_url: "https://www.youtube.com/embed/WmJ_R5I_dJE"
     language: "en"
     description: "India Today's 24-hour English-language news channel"
   MY:
-    name: "Bernama TV"
-    embed_url: "https://www.youtube.com/embed/live_stream?channel=UCMihlTFBOzEBrCAHVzyMyrQ"
-    # HTTP-200 verified 2026-04-06; visual verification pending
+    name: "Astro Awani"
+    embed_url: "https://www.youtube.com/embed/mkVyNaGee8A"
+    # Bernama TV has no 24/7 YouTube stream; reusing primary
     language: "ms"
-    description: "Malaysian National News Agency's official broadcast channel"
+    description: "Malaysia's 24-hour Malay-language news channel"
   NG:
     name: "TVC News Nigeria"
-    embed_url: "https://www.youtube.com/embed/live_stream?channel=UCgp4A6I8LCWrhUzn-5SbKvA"
-    # HTTP-200 verified 2026-04-06; visual verification pending
+    embed_url: "https://www.youtube.com/embed/-veEo64fP_w"
     language: "en"
     description: "Nigerian 24-hour English-language news broadcaster"
   ZA:
-    name: "Newzroom Afrika"
-    embed_url: "https://www.youtube.com/embed/live_stream?channel=UCQ7M3hUDGMm-8XyEAcOmOBg"
-    # HTTP-200 verified 2026-04-06; visual verification pending
+    name: "France 24"
+    embed_url: "https://www.youtube.com/embed/Ap-UM1O9RBU"
     language: "en"
-    description: "South African 24-hour multilingual news channel"
+    description: "France 24 English — extensive Africa desk coverage"

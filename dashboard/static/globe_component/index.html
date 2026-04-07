@@ -8,20 +8,31 @@
     body { margin: 0; padding: 0; background: #0d1117; overflow: hidden; }
     #globe { width: 100%; height: 100vh; }
     #tooltip {
-      position: absolute;
-      z-index: 10;
-      pointer-events: none;
-      background: rgba(22, 27, 34, 0.92);
-      color: #e6edf3;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 8px 12px;
+      position: absolute; z-index: 10; pointer-events: none;
+      background: rgba(22, 27, 34, 0.92); color: #e6edf3;
+      border: 1px solid #30363d; border-radius: 6px;
+      padding: 6px 10px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      font-size: 13px;
+      font-size: 12px; display: none;
+    }
+    #tooltip .tt-country { font-weight: 600; margin-bottom: 1px; }
+    #tooltip .tt-count { color: #f85149; }
+    #back-btn {
+      position: absolute; top: 8px; left: 8px; z-index: 20;
+      background: rgba(22, 27, 34, 0.85); color: #58a6ff;
+      border: 1px solid #30363d; border-radius: 4px;
+      padding: 4px 10px; font-size: 11px; cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       display: none;
     }
-    #tooltip .tt-country { font-weight: 600; margin-bottom: 2px; }
-    #tooltip .tt-count { color: #f85149; }
+    #back-btn:hover { background: #30363d; }
+    #country-label {
+      position: absolute; bottom: 8px; left: 8px; z-index: 20;
+      color: #e6edf3; font-size: 13px; font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: rgba(22, 27, 34, 0.7); padding: 3px 8px;
+      border-radius: 4px; display: none;
+    }
   </style>
 </head>
 <body>
@@ -30,46 +41,45 @@
     <div class="tt-country"></div>
     <div class="tt-count"></div>
   </div>
+  <button id="back-btn" onclick="goBack()">&#x2190; Global View</button>
+  <div id="country-label"></div>
 
   <script>
-    // ── Minimal Streamlit Component Protocol ────────────────────────────
-    // Implements the three essential postMessage calls so that
-    // declare_component() can exchange data with this iframe.
+    // ── Streamlit Component Protocol ────────────────────────────────────
+    // Capture parent origin on first message for secure postMessage
+    var _parentOrigin = null;
 
     var Streamlit = {
+      _post: function(msg) {
+        window.parent.postMessage(msg, _parentOrigin || '*');
+      },
       setComponentReady: function() {
-        window.parent.postMessage({
-          isStreamlitMessage: true,
-          apiVersion: 1,
+        this._post({
+          isStreamlitMessage: true, apiVersion: 1,
           type: 'streamlit:componentReady'
-        }, '*');
+        });
       },
       setComponentValue: function(value) {
-        window.parent.postMessage({
-          isStreamlitMessage: true,
-          type: 'streamlit:setComponentValue',
-          value: value,
-          dataType: 'json'
-        }, '*');
+        this._post({
+          isStreamlitMessage: true, type: 'streamlit:setComponentValue',
+          value: value, dataType: 'json'
+        });
       },
       setFrameHeight: function(height) {
-        window.parent.postMessage({
-          isStreamlitMessage: true,
-          type: 'streamlit:setFrameHeight',
+        this._post({
+          isStreamlitMessage: true, type: 'streamlit:setFrameHeight',
           height: height || document.body.scrollHeight
-        }, '*');
+        });
       },
       RENDER_EVENT: 'streamlit:render',
       events: new EventTarget()
     };
 
     window.addEventListener('message', function(event) {
-      // Only accept messages from the parent frame (Streamlit host).
-      // This prevents other tabs, extensions, or local pages from
-      // injecting fake render events with crafted article data.
-      if (event.source !== window.parent) {
-        return;
-      }
+      if (event.source !== window.parent) return;
+      // Lock to parent origin on first valid message
+      if (!_parentOrigin) _parentOrigin = event.origin;
+      if (event.origin !== _parentOrigin) return;
       if (event.data && event.data.type === Streamlit.RENDER_EVENT) {
         Streamlit.events.dispatchEvent(
           new CustomEvent(Streamlit.RENDER_EVENT, { detail: event.data })
@@ -77,95 +87,119 @@
       }
     });
 
-    // ── Globe state ─────────────────────────────────────────────────────
+    // ── State ───────────────────────────────────────────────────────────
     var tooltip = document.getElementById('tooltip');
+    var backBtn = document.getElementById('back-btn');
+    var countryLabel = document.getElementById('country-label');
     var deckInstance = null;
     var GlobeView = null;
 
-    // Auto-rotation state
+    // Rotation
     var ROTATION_INCREMENT = 0.03;
     var IDLE_RESUME_MS = 3000;
-    var MAX_ROTATION_MS = 60000;
     var currentLongitude = 30;
     var rotating = true;
     var idleTimer = null;
-    var rotationStartTime = Date.now();
-    var totalRotationElapsed = 0;
 
-    // ── Tooltip helpers ─────────────────────────────────────────────────
-    function showTooltip(x, y, countryText, countText) {
+    // Current drill-down state
+    var currentSelectedCountry = null;
+    var currentAdmin1Geojson = null;
+    var currentCountryCenters = {};
+
+    // Cached data for layer rebuilds
+    var _articleData = [];
+    var _countriesGeojson = { type: 'FeatureCollection', features: [] };
+    var _focusCountries = [];
+
+    // ── Tooltip ─────────────────────────────────────────────────────────
+    function showTooltip(x, y, text, sub) {
       tooltip.style.display = 'block';
-      tooltip.style.left = (x + 12) + 'px';
-      tooltip.style.top = (y + 12) + 'px';
-      tooltip.querySelector('.tt-country').textContent = countryText;
-      tooltip.querySelector('.tt-count').textContent = countText || '';
+      tooltip.style.left = (x + 10) + 'px';
+      tooltip.style.top = (y + 10) + 'px';
+      tooltip.querySelector('.tt-country').textContent = text;
+      tooltip.querySelector('.tt-count').textContent = sub || '';
     }
+    function hideTooltip() { tooltip.style.display = 'none'; }
 
-    function hideTooltip() {
-      tooltip.style.display = 'none';
-    }
-
-    // ── Auto-rotation ───────────────────────────────────────────────────
+    // ── Rotation control ────────────────────────────────────────────────
     function pauseRotation() {
       rotating = false;
       if (idleTimer) clearTimeout(idleTimer);
-      idleTimer = setTimeout(function() {
-        if (totalRotationElapsed < MAX_ROTATION_MS) {
-          rotating = true;
-          rotationStartTime = Date.now();
-        }
-      }, IDLE_RESUME_MS);
+      // Only auto-resume in global view
+      if (!currentSelectedCountry) {
+        idleTimer = setTimeout(function() { rotating = true; }, IDLE_RESUME_MS);
+      }
     }
 
     function animateRotation() {
       requestAnimationFrame(animateRotation);
-      if (!rotating || document.hidden || !deckInstance) {
-        // Always update rotationStartTime so hidden-tab duration is not
-        // accumulated into totalRotationElapsed on resume (CC2-H9).
-        rotationStartTime = Date.now();
-        return;
-      }
-
-      var now = Date.now();
-      totalRotationElapsed += now - rotationStartTime;
-      rotationStartTime = now;
-
-      if (totalRotationElapsed >= MAX_ROTATION_MS) {
-        rotating = false;
-        return;
-      }
-
+      if (!rotating || document.hidden || !deckInstance || currentSelectedCountry) return;
       currentLongitude += ROTATION_INCREMENT;
       if (currentLongitude > 180) currentLongitude -= 360;
-
       deckInstance.setProps({
         initialViewState: {
-          latitude: 20,
-          longitude: currentLongitude,
-          zoom: 1.2,
-          transitionDuration: 0
+          latitude: 20, longitude: currentLongitude,
+          zoom: 1.2, transitionDuration: 0
         }
       });
     }
 
-    var interactionEvents = ['mousedown', 'wheel', 'touchstart', 'pointerdown'];
-    interactionEvents.forEach(function(evt) {
+    ['mousedown', 'wheel', 'touchstart', 'pointerdown'].forEach(function(evt) {
       document.addEventListener(evt, pauseRotation, { passive: true });
     });
 
-    document.addEventListener('visibilitychange', function() {
-      if (!document.hidden && rotating) {
-        rotationStartTime = Date.now();
-      }
-    });
+    // ── Fly to country ──────────────────────────────────────────────────
+    function flyToCountry(cc) {
+      var center = currentCountryCenters[cc];
+      if (!center || !deckInstance) return;
+      currentSelectedCountry = cc;
+      rotating = false;
+      if (idleTimer) clearTimeout(idleTimer);
 
-    // ── Build layers from args ──────────────────────────────────────────
-    // Separated so layers can be rebuilt on rerender without recreating
-    // the entire deck.gl instance.
+      deckInstance.setProps({
+        initialViewState: {
+          latitude: center.lat, longitude: center.lng,
+          zoom: center.zoom || 4.5,
+          transitionDuration: 1200,
+          transitionInterpolator: new deck.FlyToInterpolator()
+        }
+      });
 
-    function buildLayers(articleData, countriesGeojson, focusCountries) {
-      var focusSet = new Set(focusCountries);
-      var maxCount = articleData.reduce(function(m, d) {
+      backBtn.style.display = 'block';
+      countryLabel.textContent = center.name || cc;
+      countryLabel.style.display = 'block';
+      rebuildLayers();
+    }
+
+    function goBack() {
+      currentSelectedCountry = null;
+      currentAdmin1Geojson = null;
+      backBtn.style.display = 'none';
+      countryLabel.style.display = 'none';
+      rotating = true;
+
+      if (!deckInstance) return;
+      deckInstance.setProps({
+        initialViewState: {
+          latitude: 20, longitude: currentLongitude,
+          zoom: 1.2, transitionDuration: 1000,
+          transitionInterpolator: new deck.FlyToInterpolator()
+        }
+      });
+
+      rebuildLayers();
+      Streamlit.setComponentValue(null);
+    }
+
+    // ── Layer building ──────────────────────────────────────────────────
+    function rebuildLayers() {
+      if (!deckInstance) return;
+      deckInstance.setProps({ layers: buildLayers() });
+    }
+
+    function buildLayers() {
+      var focusSet = new Set(_focusCountries);
+      var maxCount = _articleData.reduce(function(m, d) {
         return Math.max(m, d.count || 0);
       }, 1);
 
@@ -174,132 +208,150 @@
         return [
           Math.round(255 + (248 - 255) * t),
           Math.round(215 + (81 - 215) * t),
-          Math.round(0 + (73 - 0) * t),
-          200
+          Math.round(0 + (73 - 0) * t), 200
         ];
       }
 
-      function getRadius(count) {
-        var t = Math.min(count / maxCount, 1);
-        return 20000 + t * 100000;
-      }
+      var layers = [];
 
-      var countryLayer = new deck.GeoJsonLayer({
+      // Layer 1: Country polygons
+      layers.push(new deck.GeoJsonLayer({
         id: 'country-polygons',
-        data: countriesGeojson,
-        filled: true,
-        stroked: true,
-        getFillColor: function(feature) {
-          var iso2 = feature.properties.iso2 || feature.properties.ISO_A2 || '';
-          if (focusSet.has(iso2)) return [248, 81, 73, 120];
+        data: _countriesGeojson,
+        filled: true, stroked: true,
+        getFillColor: function(f) {
+          var iso2 = f.properties.iso2 || f.properties.ISO_A2 || '';
+          if (currentSelectedCountry && iso2 === currentSelectedCountry) return [248, 81, 73, 160];
+          if (focusSet.has(iso2)) return [248, 81, 73, 80];
           return [20, 25, 35, 200];
         },
-        getLineColor: [40, 50, 65, 150],
-        getLineWidth: 1,
-        lineWidthMinPixels: 1,
-        pickable: true,
-        autoHighlight: true,
+        getLineColor: function(f) {
+          var iso2 = f.properties.iso2 || f.properties.ISO_A2 || '';
+          if (currentSelectedCountry && iso2 === currentSelectedCountry) return [248, 81, 73, 200];
+          return [40, 50, 65, 150];
+        },
+        getLineWidth: 1, lineWidthMinPixels: 1,
+        pickable: true, autoHighlight: true,
         highlightColor: [255, 255, 255, 40],
+        updateTriggers: {
+          getFillColor: [currentSelectedCountry],
+          getLineColor: [currentSelectedCountry]
+        },
         onHover: function(info) {
           if (info.object) {
-            var props = info.object.properties;
-            var name = props.NAME || props.ADMIN || 'Unknown';
-            var iso2 = props.iso2 || props.ISO_A2 || '';
-            var hint = focusSet.has(iso2) ? ' (click to drill down)' : '';
-            showTooltip(info.x, info.y, name + hint, '');
-          } else {
-            hideTooltip();
-          }
-        },
-        onClick: function(info) {
-          if (info.object) {
-            var iso2 = info.object.properties.iso2 || info.object.properties.ISO_A2 || '';
-            if (focusSet.has(iso2) && /^[A-Z]{2}$/.test(iso2)) {
-              Streamlit.setComponentValue(iso2);
-            }
-          }
+            var p = info.object.properties;
+            var name = p.NAME || p.ADMIN || 'Unknown';
+            showTooltip(info.x, info.y, name, '');
+          } else { hideTooltip(); }
         }
-      });
+        // No onClick — navigation is handled by Streamlit buttons
+      }));
 
-      var scatterLayer = new deck.ScatterplotLayer({
+      // Layer 2: Scatter dots
+      layers.push(new deck.ScatterplotLayer({
         id: 'surveillance-scatter',
-        data: articleData,
+        data: _articleData,
         getPosition: function(d) { return [d.lng, d.lat]; },
-        getRadius: function(d) { return getRadius(d.count); },
+        getRadius: function(d) {
+          var t = Math.min(d.count / maxCount, 1);
+          return 20000 + t * 100000;
+        },
         getFillColor: function(d) { return getColor(d.count); },
         pickable: true,
-        opacity: 0.8,
-        radiusMinPixels: 5,
-        radiusMaxPixels: 40,
+        opacity: currentSelectedCountry ? 0.3 : 0.8,
+        radiusMinPixels: 4, radiusMaxPixels: 35,
+        updateTriggers: { opacity: [currentSelectedCountry] },
         onHover: function(info) {
           if (info.object) {
             var d = info.object;
-            showTooltip(
-              info.x, info.y,
+            showTooltip(info.x, info.y,
               d.country_name + ' (' + d.country_code + ')',
-              d.count + ' article' + (d.count !== 1 ? 's' : '')
-            );
-          } else {
-            hideTooltip();
-          }
+              d.count + ' article' + (d.count !== 1 ? 's' : ''));
+          } else { hideTooltip(); }
         }
-      });
+      }));
 
-      return [countryLayer, scatterLayer];
+      // Layer 3: Admin-1 overlay (only when drilled down)
+      if (currentSelectedCountry && currentAdmin1Geojson) {
+        layers.push(new deck.GeoJsonLayer({
+          id: 'admin1-overlay',
+          data: currentAdmin1Geojson,
+          filled: true, stroked: true,
+          getFillColor: [248, 81, 73, 50],
+          getLineColor: [248, 81, 73, 150],
+          getLineWidth: 1, lineWidthMinPixels: 1,
+          pickable: true, autoHighlight: true,
+          highlightColor: [248, 81, 73, 100],
+          onHover: function(info) {
+            if (info.object) {
+              var name = info.object.properties.NAME_1 || info.object.properties.name || 'Region';
+              showTooltip(info.x, info.y, name, '');
+            } else { hideTooltip(); }
+          }
+        }));
+      }
+
+      return layers;
     }
 
-    // ── Render handler — called each time Streamlit sends (new) args ────
+    // ── Render handler ──────────────────────────────────────────────────
     function onRender(event) {
       var args = event.detail.args;
       if (!args) return;
 
-      var articleData = args.article_data || [];
-      var countriesGeojson = args.countries_geojson || {
-        type: 'FeatureCollection', features: []
-      };
-      var focusCountries = args.focus_countries || [];
-      var componentHeight = args.height || 550;
+      _articleData = args.article_data || [];
+      _countriesGeojson = args.countries_geojson || { type: 'FeatureCollection', features: [] };
+      _focusCountries = args.focus_countries || [];
+      currentCountryCenters = args.country_centers || {};
+      var componentHeight = args.height || 500;
+      var selectedCountry = args.selected_country || null;
 
-      var layers = buildLayers(articleData, countriesGeojson, focusCountries);
+      // Handle admin-1 GeoJSON from Python
+      if (args.admin1_geojson) {
+        currentAdmin1Geojson = args.admin1_geojson;
+      } else if (!selectedCountry) {
+        currentAdmin1Geojson = null;
+      }
+
+      // Sync selection state from Python
+      if (selectedCountry !== currentSelectedCountry) {
+        if (selectedCountry && currentCountryCenters[selectedCountry]) {
+          flyToCountry(selectedCountry);
+        } else if (!selectedCountry && currentSelectedCountry) {
+          goBack();
+        }
+      }
 
       if (!deckInstance) {
-        // First render — create the deck.gl instance
         GlobeView = deck.GlobeView || deck._GlobeView;
         if (!GlobeView) {
           document.getElementById('globe').innerHTML =
             '<p style="color:#8b949e;text-align:center;padding:40px;">' +
-            'Globe view unavailable — deck.gl GlobeView not found.</p>';
+            'Globe view unavailable.</p>';
           Streamlit.setFrameHeight(componentHeight);
           return;
         }
-        if (GlobeView) {
-          deckInstance = new deck.DeckGL({
-            container: 'globe',
-            views: new GlobeView({ resolution: 10 }),
-            initialViewState: {
-              latitude: 20,
-              longitude: 30,
-              zoom: 1.2
-            },
-            controller: true,
-            layers: layers,
-            parameters: {
-              clearColor: [13 / 255, 17 / 255, 23 / 255, 1]
-            }
-          });
+        deckInstance = new deck.DeckGL({
+          container: 'globe',
+          views: new GlobeView({ resolution: 10 }),
+          initialViewState: { latitude: 20, longitude: 30, zoom: 1.2 },
+          controller: true,
+          layers: buildLayers(),
+          parameters: { clearColor: [13/255, 17/255, 23/255, 1] }
+        });
+        animateRotation();
 
-          rotationStartTime = Date.now();
-          animateRotation();
+        // If already selected on first render, fly there after init
+        if (selectedCountry) {
+          setTimeout(function() { flyToCountry(selectedCountry); }, 500);
         }
       } else {
-        // Subsequent render — update layers with new data
-        deckInstance.setProps({ layers: layers });
+        rebuildLayers();
       }
 
       Streamlit.setFrameHeight(componentHeight);
     }
 
-    // Register render handler and signal ready
     Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onRender);
     Streamlit.setComponentReady();
   </script>

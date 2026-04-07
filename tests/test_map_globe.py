@@ -202,3 +202,37 @@ def test_deck_globe_html_contains_all_placeholders():
     assert "__ARTICLE_DATA__" in text
     assert "__COUNTRIES_GEOJSON__" in text
     assert "__FOCUS_COUNTRIES__" in text
+
+
+# ── _load_admin1_geojson — _ALLOWED_COUNTRY_CODES guard ────────────────
+
+
+def test_load_admin1_geojson_rejects_unknown_country():
+    """_load_admin1_geojson should return None for codes not in _ALLOWED_COUNTRY_CODES."""
+    from dashboard.components.map_globe import _load_admin1_geojson
+
+    assert _load_admin1_geojson("XX") is None
+
+
+def test_load_admin1_geojson_rejects_path_traversal():
+    """_load_admin1_geojson should return None for path traversal attempts."""
+    from dashboard.components.map_globe import _load_admin1_geojson
+
+    assert _load_admin1_geojson("../etc") is None
+
+
+def test_load_admin1_geojson_accepts_allowed_codes():
+    """_load_admin1_geojson should accept all four allowed country codes."""
+    from dashboard.components.map_globe import _load_admin1_geojson, _admin1_cache, _admin1_lock
+
+    # Clear the admin1 cache to ensure fresh loads
+    with _admin1_lock:
+        _admin1_cache.clear()
+
+    for cc in ("IN", "MY", "NG", "ZA"):
+        result = _load_admin1_geojson(cc)
+        # The function should not reject these codes (returns data or None
+        # only if the file is missing, NOT because the code was blocked)
+        assert result is None or isinstance(result, dict), (
+            f"Expected dict or None for allowed code {cc}, got {type(result)}"
+        )

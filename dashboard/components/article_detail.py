@@ -88,11 +88,48 @@ def render_article_detail(article: Optional[Article]) -> str:
     else:
         link_html = '<span style="color:#8b949e;">No link available</span>'
 
+    # Original article embed (iframe for https, link-only for http)
+    embed_html = ""
+    if url:
+        escaped_url = html.escape(url)
+        if is_https:
+            embed_html = (
+                f'<div style="margin-top:12px;">'
+                f'<div style="color:#8b949e;font-size:11px;margin-bottom:4px;">'
+                f'ORIGINAL ARTICLE</div>'
+                f'<iframe src="{escaped_url}" '
+                f'width="100%" height="400" '
+                f'style="border:1px solid #30363d;border-radius:6px;'
+                f'background:#fff;" '
+                f'sandbox="allow-scripts allow-same-origin" '
+                f'loading="lazy"></iframe>'
+                f'</div>'
+            )
+        else:
+            embed_html = (
+                f'<div style="margin-top:12px;">'
+                f'<div style="color:#8b949e;font-size:11px;margin-bottom:4px;">'
+                f'ORIGINAL ARTICLE</div>'
+                f'<p style="color:#d29922;font-size:12px;">'
+                f'Cannot embed insecure (HTTP) page. '
+                f'<a href="{escaped_url}" target="_blank" '
+                f'rel="noopener noreferrer">Open in new tab &rarr;</a></p>'
+                f'</div>'
+            )
+
     return (
         f'<div class="article-detail">'
         f"{headline_html}"
-        f'<div class="article-summary">{summary}</div>'
-        f"<hr>"
+        # AI summary block
+        f'<div style="background:#161b22;border:1px solid #30363d;'
+        f'border-radius:6px;padding:10px;margin:8px 0;">'
+        f'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">'
+        f'<span style="background:#58a6ff;color:#fff;padding:2px 6px;'
+        f'border-radius:3px;font-size:10px;font-weight:600;">AI SUMMARY</span>'
+        f'</div>'
+        f'<div style="color:#c9d1d9;font-size:13px;line-height:1.5;">'
+        f'{summary}</div>'
+        f'</div>'
         f"<table>"
         f"<tr><td><strong>Confidence</strong></td><td>{conf:.2f}</td></tr>"
         f"<tr><td><strong>Category</strong></td><td>"
@@ -101,6 +138,7 @@ def render_article_detail(article: Optional[Article]) -> str:
         f"<tr><td><strong>Source</strong></td><td>{source} (Tier {tier})</td></tr>"
         f"<tr><td><strong>Published</strong></td><td>{pub_date}</td></tr>"
         f"</table>"
-        f'<div style="margin-top:12px;">{link_html}</div>'
+        f'<div style="margin-top:8px;">{link_html}</div>'
+        f"{embed_html}"
         f"</div>"
     )

@@ -710,3 +710,65 @@ def test_parse_dt_naive_iso_assumes_utc():
     result = Database._parse_dt("2026-03-31T12:00:00")
     assert result is not None
     assert result.tzinfo == timezone.utc
+
+
+# ------------------------------------------------------------------ #
+#  get_flagged_articles — country_codes (multi-country IN clause)     #
+# ------------------------------------------------------------------ #
+
+
+def _seed_multi_country_articles(db):
+    """Insert flagged articles for IN, MY, NG, ZA, and US."""
+    from src.models import Article
+
+    countries = [
+        ("IN", "India"),
+        ("MY", "Malaysia"),
+        ("NG", "Nigeria"),
+        ("ZA", "South Africa"),
+        ("US", "United States"),
+    ]
+    for cc, name in countries:
+        db.upsert_article(Article(
+            id=f"cc_{cc}", url=f"https://a.com/{cc.lower()}", title=f"{name} article",
+            source_name="Wire", source_lang="en", source_tier=1,
+            is_surveillance=True, confidence=0.9,
+            category="surveillance", country_code=cc, country_name=name,
+        ))
+
+
+def test_get_flagged_articles_country_codes_filters_multiple(db):
+    """country_codes=['IN', 'MY'] should return only articles from those countries."""
+    _seed_multi_country_articles(db)
+
+    results = db.get_flagged_articles(country_codes=["IN", "MY"])
+    returned_codes = {a.country_code for a in results}
+    assert returned_codes == {"IN", "MY"}
+    assert len(results) == 2
+
+
+def test_get_flagged_articles_country_code_takes_precedence(db):
+    """When both country_code and country_codes are provided, country_code wins."""
+    _seed_multi_country_articles(db)
+
+    results = db.get_flagged_articles(
+        country_code="NG", country_codes=["IN", "MY"],
+    )
+    assert len(results) == 1
+    assert results[0].country_code == "NG"
+
+
+def test_get_flagged_articles_empty_country_codes_returns_all(db):
+    """country_codes=[] (empty list) should apply no filter — return all articles."""
+    _seed_multi_country_articles(db)
+
+    results = db.get_flagged_articles(country_codes=[])
+    assert len(results) == 5
+
+
+def test_get_flagged_articles_country_codes_none_returns_all(db):
+    """country_codes=None should apply no filter — return all articles."""
+    _seed_multi_country_articles(db)
+
+    results = db.get_flagged_articles(country_codes=None)
+    assert len(results) == 5

@@ -13,6 +13,32 @@
      Accent blue:   #58a6ff  (links / interactive)
    ============================================================= */
 
+/* --- Tight layout: minimize Streamlit default padding --- */
+.block-container {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0 !important;
+    padding-left: 0.8rem !important;
+    padding-right: 0.8rem !important;
+    max-width: 100% !important;
+}
+
+[data-testid="column"] {
+    padding: 0 4px !important;
+}
+
+[data-testid="stVerticalBlock"] > div {
+    gap: 0.3rem !important;
+}
+
+/* Hide Streamlit header bar and footer for clean look */
+.stApp header[data-testid="stHeader"] {
+    display: none !important;
+}
+
+footer { display: none !important; }
+
+#MainMenu { display: none !important; }
+
 /* --- Global background & text --- */
 .stApp {
     background-color: #0d1117 !important;
@@ -38,29 +64,32 @@ section[data-testid="stSidebar"] label {
 }
 
 /* --- Header / title --- */
-.stApp header[data-testid="stHeader"] {
-    background-color: #0d1117;
-    border-bottom: 1px solid #30363d;
-}
-
 h1, h2, h3, h4, h5, h6 {
     color: #e6edf3 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
+
+h1 { font-size: 1.3rem !important; }
+h2 { font-size: 1.1rem !important; }
+h3 { font-size: 0.95rem !important; }
 
 /* --- Metric cards --- */
 div[data-testid="stMetric"] {
     background-color: #161b22;
     border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 16px;
+    border-radius: 6px;
+    padding: 8px 12px;
 }
 
 div[data-testid="stMetric"] label {
     color: #8b949e;
+    font-size: 0.75rem;
 }
 
 div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
     color: #e6edf3;
+    font-size: 1.2rem;
 }
 
 div[data-testid="stMetric"] div[data-testid="stMetricDelta"] svg {

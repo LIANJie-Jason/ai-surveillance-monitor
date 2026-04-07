@@ -51,8 +51,8 @@ RSS Feeds (64 sources, 60 active)
 - **Geo resolver** -- 130 city/alias-to-admin-1 mappings across 4 drill-down countries for accurate choropleth rendering.
 - **News feed with filtering** -- filter by category, country, confidence score, and date range.
 - **Article detail panel** -- full article view with SSRF protection (blocks requests to private/reserved IP ranges via `src/url_utils.py`).
-- **Live streams** -- 8 embedded YouTube live streams (4 primary + 4 fallback) using stable channel-based URLs.
-- **Webcams** -- 12 city webcam embeds across 4 countries, all using channel-based YouTube URLs for stability.
+- **Live streams** -- 8 YouTube live streams (4 primary + 4 fallback). Channel IDs are resolved to live video IDs at dashboard startup via the YouTube Data API v3. Falls back to SkylineWebcams links where available.
+- **Webcams** -- 12 city webcam slots across 4 countries. YouTube channel IDs are resolved dynamically; unresolved slots fall back to a YouTube search for ``<city> live webcam``, then to a SkylineWebcams link (Cape Town, KL, Durban), then to a placeholder.
 - **Security hardening** -- Unicode bidi-override stripping on LLM outputs, HTML escaping throughout, parameterized SQL queries, HTTPS-only embeds with private-IP blocking, `postMessage` source validation in iframe components.
 - **SQLite with WAL mode** -- busy_timeout and read-only mode for the dashboard enable concurrent read/write without locking.
 - **ISO 3166-1 alpha-2 country codes** throughout.
@@ -63,6 +63,7 @@ RSS Feeds (64 sources, 60 active)
 
 - Python 3.11+
 - For live ingestion: **both** an OpenAI API key and an Anthropic API key (the ingestion worker requires both; it exits if either is missing)
+- For live stream/webcam embeds: a YouTube Data API v3 key (free from Google Cloud Console; dashboard works without it but streams show as placeholders)
 
 ### Install
 
@@ -83,9 +84,10 @@ streamlit run dashboard/app.py     # Launch the dashboard
 
 ```bash
 cp .env.example .env
-# Edit .env and fill in BOTH keys:
-#   OPENAI_API_KEY=sk-...
-#   ANTHROPIC_API_KEY=sk-ant-...
+# Edit .env and fill in keys:
+#   OPENAI_API_KEY=sk-...        (required for ingestion)
+#   ANTHROPIC_API_KEY=sk-ant-... (required for ingestion)
+#   YOUTUBE_API_KEY=AIza...      (optional; enables live stream embeds)
 
 # Single pass
 python scripts/run_ingestion.py --once
@@ -129,6 +131,7 @@ src/
   classifier.py        # LLM-based surveillance/censorship classification with bidi stripping
   summarizer.py        # LLM-based article summarization
   url_utils.py         # Shared SSRF/private-host validation (used by models, article_detail, _utils)
+  stream_resolver.py   # YouTube Data API v3 — resolves channel IDs to live video IDs at startup
   ingestion.py         # RSS fetch worker with schedule loop and article caps
 
 scripts/
@@ -175,7 +178,7 @@ data/
   seed_articles.json   # 79 web-verified seed articles (13 countries, 7 categories)
   monitor.db           # SQLite database (gitignored)
 
-tests/                 # 23 test files, 569 tests
+tests/                 # 24 test files, 610 tests
 ```
 
 ## Source Tiers
@@ -249,7 +252,7 @@ The seed database enables a fully functional demo dashboard without any API keys
 ## Testing
 
 ```bash
-# Run all tests (569 tests across 23 test files)
+# Run all tests (610 tests across 24 test files)
 python -m pytest tests/ -q
 
 # Run a specific test file
@@ -291,7 +294,7 @@ python -m pytest tests/test_scripts.py -v
 - **Seed-first demo** -- the 79 verified seed articles allow the full dashboard to be demonstrated without API keys or live RSS ingestion.
 - **3D globe with GlobeView** -- deck.gl 9.1.8 GlobeView renders country polygons from Natural Earth GeoJSON (public domain, bundled as static files). Implemented as a Streamlit bidirectional component for click interaction. Auto-rotation pauses on interaction and resumes after 3 seconds idle.
 - **Choropleth drill-down** -- admin-1 boundaries (states/provinces) from Natural Earth, with a static city-to-admin-1 resolver (`geo_resolver.py`) mapping all `regions.yaml` aliases to GeoJSON boundary names. Falls back to scatter dots if GeoJSON is unavailable.
-- **Channel-based YouTube embeds** -- all webcam and live stream URLs use `youtube.com/embed/live_stream?channel=<ID>` format, which is stable across stream restarts (unlike video-ID URLs that break when channels go offline and restart).
+- **Dynamic YouTube stream resolution** -- YouTube deprecated the `live_stream?channel=` embed format. At dashboard startup, `src/stream_resolver.py` resolves channel IDs to current live video IDs via the YouTube Data API v3, producing working `youtube.com/embed/<VIDEO_ID>` URLs. Fallback chain for webcams: configured channel → YouTube search for `<city> live webcam` → SkylineWebcams link (Cape Town, KL, Durban) → placeholder. Requires `YOUTUBE_API_KEY` in `.env`; dashboard works without it but streams show placeholders. Resolution runs once per process (not per Streamlit rerun).
 - **Article caps** -- per-feed cap (100, enforced within each feed) and per-run cap (~500, checked between feeds so the last feed's articles may slightly exceed the target) prevent LLM cost amplification from high-volume feeds.
 - **Charset detection** -- feedparser receives `Content-Type` headers for correct charset handling of non-English feeds.
 
@@ -304,4 +307,4 @@ python -m pytest tests/test_scripts.py -v
 
 ## Status
 
-22 production modules implemented. 569 tests passing across 23 test files. CC4 audit complete (0 critical issues).
+23 production modules implemented. 610 tests passing across 24 test files. CC4 audit complete (0 critical issues).

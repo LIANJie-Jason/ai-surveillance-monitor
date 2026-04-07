@@ -265,6 +265,7 @@ class Database:
     def get_flagged_articles(
         self,
         country_code: Optional[str] = None,
+        country_codes: Optional[list[str]] = None,
         category: Optional[str] = None,
         min_confidence: float = 0.6,
         date_from: Optional[str] = None,
@@ -274,6 +275,9 @@ class Database:
         """Return surveillance-flagged articles above the confidence threshold.
 
         Supports optional filters for country, category, and date range.
+        ``country_codes`` filters to multiple countries (IN clause);
+        ``country_code`` filters to a single country. If both are given,
+        ``country_code`` takes precedence.
         Results are ordered by published_at descending (NULLs sort last).
         """
         query = "SELECT * FROM articles WHERE is_surveillance = 1 AND confidence >= ?"
@@ -282,6 +286,10 @@ class Database:
         if country_code:
             query += " AND country_code = ?"
             params.append(country_code)
+        elif country_codes:
+            placeholders = ",".join("?" for _ in country_codes)
+            query += f" AND country_code IN ({placeholders})"
+            params.extend(country_codes)
         if category:
             query += " AND category = ?"
             params.append(category)

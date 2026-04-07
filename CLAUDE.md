@@ -26,6 +26,7 @@ src/
   classifier.py      # LLM-based surveillance/censorship classification
   summarizer.py      # LLM-based article summarization
   url_utils.py       # Shared SSRF/private-host validation (used by models, article_detail, _utils)
+  stream_resolver.py # YouTube Data API v3 — resolves channel IDs to live video IDs at startup
   ingestion.py       # RSS fetch worker with schedule loop
 
 scripts/
@@ -113,7 +114,7 @@ python scripts/run_ingestion.py --interval 600 --log-level DEBUG
 ## Testing
 
 ```bash
-# Run all tests (569 tests)
+# Run all tests (610 tests)
 python -m pytest tests/ -q
 
 # Run specific test file
@@ -122,7 +123,7 @@ python -m pytest tests/test_scripts.py -v
 
 ## Status
 
-24 modules implemented. 569 tests passing across 22 test files.
+25 modules implemented. 610 tests passing across 24 test files.
 
 | Module | Status |
 |--------|--------|

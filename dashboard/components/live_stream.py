@@ -59,6 +59,23 @@ def _clear_streams_cache() -> None:
     _streams_cache = None
 
 
+def set_resolved_streams(data: dict[str, Any]) -> None:
+    """Inject resolver-produced config, replacing any file-loaded cache.
+
+    Called at dashboard startup after the stream resolver resolves
+    YouTube channel IDs to live video IDs.  Rejects non-dict values
+    to prevent a resolver bug from poisoning the cache.
+    """
+    if not isinstance(data, dict):
+        logger.warning(
+            "set_resolved_streams: expected dict, got %s — ignoring",
+            type(data).__name__,
+        )
+        return
+    global _streams_cache
+    _streams_cache = data
+
+
 # Preserve the `load_streams.cache_clear()` API that tests rely on.
 load_streams.cache_clear = _clear_streams_cache  # type: ignore[attr-defined]
 
@@ -100,10 +117,10 @@ def render_live_stream(
 
     if stream is None:
         return (
-            '<div class="live-stream-container">'
+            '<body style="margin:0;padding:0;background:#0d1117;">'
             '<p style="color:#8b949e;text-align:center;padding:40px;">'
             "No live stream available for this country."
-            "</p></div>"
+            "</p></body>"
         )
 
     name = html.escape(stream.get("name", ""))
@@ -112,16 +129,18 @@ def render_live_stream(
 
     if not embed_url:
         return (
-            '<div class="live-stream-container">'
+            '<body style="margin:0;padding:0;background:#0d1117;">'
             f'<h4 style="color:#e6edf3;">{name}</h4>'
             '<p style="color:#8b949e;">Stream URL is unavailable.</p>'
-            "</div>"
+            "</body>"
         )
 
     escaped_url = html.escape(embed_url)
 
     return (
-        f'<div class="live-stream-container">'
+        f'<body style="margin:0;padding:0;background:#0d1117;">'
+        f'<div style="background:#0d1117;border:1px solid #30363d;'
+        f'border-radius:8px;padding:4px;">'
         f'<h4 style="color:#e6edf3;margin:0 0 8px 0;">'
         f'<span style="background:#e53935;color:#fff;padding:2px 8px;'
         f'border-radius:4px;font-size:12px;margin-right:8px;">LIVE</span>'
@@ -133,5 +152,5 @@ def render_live_stream(
         f'frameborder="0" allowfullscreen '
         f'allow="autoplay; encrypted-media" '
         f'style="border-radius:8px;"></iframe>'
-        f"</div>"
+        f"</div></body>"
     )

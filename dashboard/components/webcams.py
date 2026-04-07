@@ -52,6 +52,23 @@ def _clear_webcams_cache() -> None:
     _webcams_cache = None
 
 
+def set_resolved_webcams(data: dict[str, Any]) -> None:
+    """Inject resolver-produced config, replacing any file-loaded cache.
+
+    Called at dashboard startup after the stream resolver resolves
+    YouTube channel IDs to live video IDs.  Rejects non-dict values
+    to prevent a resolver bug from poisoning the cache.
+    """
+    if not isinstance(data, dict):
+        logger.warning(
+            "set_resolved_webcams: expected dict, got %s — ignoring",
+            type(data).__name__,
+        )
+        return
+    global _webcams_cache
+    _webcams_cache = data
+
+
 # Preserve the `load_webcams.cache_clear()` API that tests rely on.
 load_webcams.cache_clear = _clear_webcams_cache  # type: ignore[attr-defined]
 
@@ -97,6 +114,24 @@ def _render_cam_cell(cam: dict[str, Any], cam_height: int) -> str:
             f'allow="autoplay; encrypted-media" '
             f'style="border-radius:6px;"></iframe>'
         )
+    elif safe_embed_url(cam.get("skyline_url", "")):
+        # SkylineWebcams uses X-Frame-Options: SAMEORIGIN — cannot be
+        # iframed.  Show a styled card with a clickable link instead.
+        # safe_embed_url validates https scheme + non-private host.
+        skyline_escaped = html.escape(safe_embed_url(cam["skyline_url"]))
+        content_html = (
+            f'<div style="width:100%;height:{cam_height}px;'
+            f"background:#161b22;border-radius:6px;display:flex;"
+            f"flex-direction:column;align-items:center;"
+            f'justify-content:center;gap:8px;">'
+            f'<span style="color:#8b949e;font-size:13px;">'
+            f"No YouTube live feed available</span>"
+            f'<a href="{skyline_escaped}" target="_blank" rel="noopener" '
+            f'style="color:#58a6ff;text-decoration:none;font-size:13px;'
+            f"padding:6px 12px;border:1px solid #30363d;"
+            f'border-radius:6px;">View on SkylineWebcams &#x2197;</a>'
+            f"</div>"
+        )
     else:
         content_html = (
             f'<div style="width:100%;height:{cam_height}px;'
@@ -123,19 +158,19 @@ def render_webcam_grid(
 
     if not cams:
         return (
-            '<div class="webcam-grid-container">'
+            '<body style="margin:0;padding:0;background:#0d1117;">'
             '<p style="color:#8b949e;text-align:center;padding:20px;">'
             "No webcams available for this country."
-            "</p></div>"
+            "</p></body>"
         )
 
     cells = [_render_cam_cell(cam, cam_height) for cam in cams]
     cells_html = "\n".join(cells)
 
     return (
-        f'<div class="webcam-grid-container">'
+        f'<body style="margin:0;padding:0;background:#0d1117;">'
         f'<div style="display:grid;grid-template-columns:repeat(2,1fr);'
         f'gap:12px;">'
         f"{cells_html}"
-        f"</div></div>"
+        f"</div></body>"
     )

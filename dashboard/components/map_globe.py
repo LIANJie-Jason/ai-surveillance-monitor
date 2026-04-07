@@ -108,10 +108,51 @@ def build_globe_data(country_counts: dict[str, int]) -> list[dict[str, Any]]:
     return build_map_data(country_counts)
 
 
+# Country centers for flyTo animation (shared with index.html)
+COUNTRY_CENTERS: dict[str, dict[str, Any]] = {
+    "IN": {"lat": 20.59, "lng": 78.96, "zoom": 4.5, "name": "India"},
+    "MY": {"lat": 4.21, "lng": 101.98, "zoom": 5.5, "name": "Malaysia"},
+    "NG": {"lat": 9.08, "lng": 8.68, "zoom": 5.5, "name": "Nigeria"},
+    "ZA": {"lat": -30.56, "lng": 22.94, "zoom": 5.0, "name": "South Africa"},
+}
+
+# Admin-1 GeoJSON cache (keyed by country code)
+_admin1_cache: dict[str, dict[str, Any]] = {}
+_admin1_lock = threading.Lock()
+
+
+_ALLOWED_COUNTRY_CODES = frozenset({"IN", "MY", "NG", "ZA"})
+
+
+def _load_admin1_geojson(country_code: str) -> dict[str, Any] | None:
+    """Load admin-1 boundary GeoJSON for a country.
+
+    Only allows codes in _ALLOWED_COUNTRY_CODES to prevent path traversal.
+    Cached in module-level dict. Thread-safe.
+    """
+    if country_code not in _ALLOWED_COUNTRY_CODES:
+        logger.warning("Rejected admin1 load for non-allowed country: %s", country_code)
+        return None
+    if country_code in _admin1_cache:
+        return _admin1_cache[country_code]
+    with _admin1_lock:
+        if country_code in _admin1_cache:
+            return _admin1_cache[country_code]
+        path = _GEOJSON_DIR / f"admin1_{country_code}.geojson"
+        if not path.exists():
+            logger.warning("admin1_%s.geojson not found", country_code)
+            return None
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        _admin1_cache[country_code] = data
+    return data
+
+
 def render_globe(
     article_data: list[dict[str, Any]],
     height: int = 550,
     key: str | None = None,
+    selected_country: str | None = None,
 ) -> str | None:
     """Render the interactive globe and return the clicked country code.
 
@@ -119,33 +160,44 @@ def render_globe(
     iframe sends the ISO-2 country code back to Python when a focus
     country polygon is clicked.
 
-    Parameters
-    ----------
-    article_data:
-        Output of ``build_globe_data``.
-    height:
-        Pixel height for the globe iframe.
-    key:
-        Streamlit component key (for widget identity across reruns).
+    When ``selected_country`` is set, the globe flies to that country
+    and overlays admin-1 boundaries.
 
-    Returns
-    -------
-    str | None:
-        The ISO-2 country code if a focus country was clicked, else None.
+    Returns the ISO-2 country code if a focus country was clicked, else None.
     """
     countries_geojson = _load_countries_geojson()
     if countries_geojson is None:
         countries_geojson = {"type": "FeatureCollection", "features": []}
 
-    clicked: str | None = _globe_component(
+    # Load admin-1 GeoJSON if a country is selected
+    admin1_geojson = None
+    if selected_country and selected_country in COUNTRY_CENTERS:
+        admin1_geojson = _load_admin1_geojson(selected_country)
+
+    # Sentinel default so we can distinguish "no click" from "back button
+    # sent null".  declare_component returns default on every rerun where
+    # the JS side hasn't called setComponentValue with a *new* value.
+    _NO_CLICK = "__no_click__"
+    raw = _globe_component(
         article_data=article_data,
         countries_geojson=countries_geojson,
         focus_countries=list(FOCUS_COUNTRIES),
+        country_centers=COUNTRY_CENTERS,
+        selected_country=selected_country,
+        admin1_geojson=admin1_geojson,
         height=height,
-        default=None,
+        default=_NO_CLICK,
         key=key,
     )
-    return clicked
+    # _NO_CLICK  → no interaction this rerun → return sentinel so caller
+    #               knows not to act
+    # None/null  → JS sent setComponentValue(null) → back button
+    # "IN"/etc   → JS sent setComponentValue("IN") → country click
+    if raw == _NO_CLICK:
+        return _NO_CLICK  # type: ignore[return-value]
+    if raw is None:
+        return None
+    return raw
 
 
 # ---------------------------------------------------------------------------

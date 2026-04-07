@@ -4,6 +4,8 @@
 
 Built as a demonstration tool for an NSF research grant on computational repression, this prototype ingests RSS feeds from 64 news sources, classifies articles with LLMs, and renders a live dashboard with a 3D rotating globe, country-level drill-downs, embedded news streams, and AI-generated article summaries.
 
+![Demo](graphs/demo.gif)
+
 ---
 
 ## What It Does

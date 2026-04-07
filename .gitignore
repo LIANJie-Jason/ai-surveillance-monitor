@@ -1,0 +1,15 @@
+data/monitor.db
+data/monitor.db-wal
+data/monitor.db-shm
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.pytest_cache/
+*.log
+*.pem
+*.key
+.DS_Store
+.mypy_cache/
+=1.2.2

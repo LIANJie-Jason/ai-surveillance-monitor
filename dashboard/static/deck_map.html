@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AI Surveillance Monitor — Global Map</title>
+  <script src="https://unpkg.com/deck.gl@9.1.8/dist.min.js" integrity="sha384-HGiUm4YLHW3nt/0loKSFFg9Lp+mypCx3rms03G28arjEANWuR+RreYt7RcZi8ubz" crossorigin="anonymous"></script>
+  <style>
+    body { margin: 0; padding: 0; background: #0d1117; overflow: hidden; }
+    #map { width: 100%; height: 100vh; }
+    #tooltip {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+      background: rgba(22, 27, 34, 0.92);
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      display: none;
+    }
+    #tooltip .tt-country { font-weight: 600; margin-bottom: 2px; }
+    #tooltip .tt-count { color: #f85149; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="tooltip">
+    <div class="tt-country"></div>
+    <div class="tt-count"></div>
+  </div>
+
+  <script>
+    // Data injected by Streamlit via string replacement
+    const DATA = __DATA__;
+
+    const tooltip = document.getElementById('tooltip');
+
+    // Color scale: yellow (few) -> red (many)
+    const maxCount = DATA.reduce((m, d) => Math.max(m, d.count || 0), 1);
+
+    function getColor(count) {
+      const t = Math.min(count / maxCount, 1);
+      // Yellow [255, 215, 0] -> Red [248, 81, 73]
+      return [
+        Math.round(255 + (248 - 255) * t),
+        Math.round(215 + (81 - 215) * t),
+        Math.round(0 + (73 - 0) * t),
+        200
+      ];
+    }
+
+    function getRadius(count) {
+      // Scale radius: min 20000, max 120000
+      const t = Math.min(count / maxCount, 1);
+      return 20000 + t * 100000;
+    }
+
+    const scatterLayer = new deck.ScatterplotLayer({
+      id: 'surveillance-scatter',
+      data: DATA,
+      getPosition: d => [d.lng, d.lat],
+      getRadius: d => getRadius(d.count),
+      getFillColor: d => getColor(d.count),
+      pickable: true,
+      opacity: 0.8,
+      radiusMinPixels: 5,
+      radiusMaxPixels: 40,
+      onHover: info => {
+        if (info.object) {
+          tooltip.style.display = 'block';
+          tooltip.style.left = (info.x + 12) + 'px';
+          tooltip.style.top = (info.y + 12) + 'px';
+          tooltip.querySelector('.tt-country').textContent =
+            info.object.country_name + ' (' + info.object.country_code + ')';
+          tooltip.querySelector('.tt-count').textContent =
+            info.object.count + ' article' + (info.object.count !== 1 ? 's' : '');
+        } else {
+          tooltip.style.display = 'none';
+        }
+      }
+    });
+
+    new deck.DeckGL({
+      container: 'map',
+      // Carto Dark Matter — no API key needed
+      mapStyle: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      initialViewState: {
+        __INITIAL_VIEW_STATE__
+        pitch: 0,
+        bearing: 0
+      },
+      controller: true,
+      layers: [scatterLayer]
+    });
+  </script>
+</body>
+</html>

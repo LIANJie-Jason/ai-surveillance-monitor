@@ -1,0 +1,200 @@
+# Normalized region names with aliases and coordinates for drill-down countries
+# Used to map free-form LLM region output to map coordinates
+# Each country has 8-10 major cities/regions with common aliases
+
+regions:
+  IN:
+    # CC2-H12: State-name aliases removed from city entries to prevent
+    # state-level stories from being pinned to a single city.
+    - name: "Delhi"
+      aliases: ["New Delhi", "NCT Delhi", "Delhi NCR", "National Capital Region", "NCR"]
+      lat: 28.6139
+      lng: 77.2090
+
+    - name: "Mumbai"
+      aliases: ["Bombay", "Greater Mumbai"]
+      lat: 19.0760
+      lng: 72.8777
+
+    - name: "Bangalore"
+      aliases: ["Bengaluru", "Silicon Valley of India"]
+      lat: 12.9716
+      lng: 77.5946
+
+    - name: "Chennai"
+      aliases: ["Madras"]
+      lat: 13.0827
+      lng: 80.2707
+
+    - name: "Kolkata"
+      aliases: ["Calcutta"]
+      lat: 22.5726
+      lng: 88.3639
+
+    - name: "Hyderabad"
+      aliases: ["Cyberabad"]
+      lat: 17.3850
+      lng: 78.4867
+
+    - name: "Ahmedabad"
+      aliases: ["Amdavad"]
+      lat: 23.0225
+      lng: 72.5714
+
+    - name: "Pune"
+      aliases: ["Poona"]
+      lat: 18.5204
+      lng: 73.8567
+
+    - name: "Jaipur"
+      aliases: ["Pink City"]
+      lat: 26.9124
+      lng: 75.7873
+
+    - name: "Lucknow"
+      aliases: []
+      lat: 26.8467
+      lng: 80.9462
+
+  MY:
+    - name: "Kuala Lumpur"
+      aliases: ["KL", "Federal Territory", "Federal Territory of Kuala Lumpur"]
+      lat: 3.1390
+      lng: 101.6869
+
+    - name: "Penang"
+      aliases: ["Pulau Pinang", "George Town", "Georgetown"]
+      lat: 5.4164
+      lng: 100.3327
+
+    - name: "Johor Bahru"
+      aliases: ["JB", "Johor"]
+      lat: 1.4927
+      lng: 103.7414
+
+    - name: "Selangor"
+      aliases: ["Shah Alam", "Petaling Jaya", "PJ", "Subang Jaya", "Klang Valley"]
+      lat: 3.0738
+      lng: 101.5183
+
+    - name: "Sabah"
+      aliases: ["Kota Kinabalu", "KK", "North Borneo"]
+      lat: 5.9804
+      lng: 116.0735
+
+    - name: "Sarawak"
+      aliases: ["Kuching", "Sarawak Borneo"]
+      lat: 1.5533
+      lng: 110.3592
+
+    - name: "Putrajaya"
+      aliases: ["Federal Territory of Putrajaya"]
+      lat: 2.9264
+      lng: 101.6964
+
+    - name: "Malacca"
+      aliases: ["Melaka", "Malacca City"]
+      lat: 2.1896
+      lng: 102.2501
+
+  NG:
+    - name: "Lagos"
+      aliases: ["Lagos State", "Lagos Island", "Victoria Island", "Ikeja", "Lekki"]
+      lat: 6.5244
+      lng: 3.3792
+
+    - name: "Abuja"
+      aliases: ["FCT", "Federal Capital Territory"]
+      lat: 9.0579
+      lng: 7.4951
+
+    - name: "Kano"
+      aliases: ["Kano State"]
+      lat: 12.0022
+      lng: 8.5920
+
+    - name: "Port Harcourt"
+      aliases: ["Rivers State", "Rivers", "PH"]
+      lat: 4.8156
+      lng: 7.0498
+
+    - name: "Ibadan"
+      aliases: ["Oyo State", "Oyo"]
+      lat: 7.3775
+      lng: 3.9470
+
+    - name: "Kaduna"
+      aliases: ["Kaduna State"]
+      lat: 10.5105
+      lng: 7.4165
+
+    - name: "Enugu"
+      aliases: ["Enugu State"]
+      lat: 6.4584
+      lng: 7.5464
+
+    - name: "Benin City"
+      aliases: ["Edo State", "Edo"]
+      lat: 6.3350
+      lng: 5.6270
+
+    - name: "Maiduguri"
+      aliases: ["Borno State", "Borno"]
+      lat: 11.8311
+      lng: 13.1510
+
+    - name: "Sokoto"
+      aliases: ["Sokoto State"]
+      lat: 13.0059
+      lng: 5.2476
+
+  ZA:
+    - name: "Johannesburg"
+      aliases: ["Joburg", "Jozi", "Gauteng", "Egoli", "Sandton"]
+      lat: -26.2041
+      lng: 28.0473
+
+    - name: "Cape Town"
+      aliases: ["Mother City", "Western Cape", "Kaapstad"]
+      lat: -33.9249
+      lng: 18.4241
+
+    - name: "Durban"
+      aliases: ["eThekwini", "KwaZulu-Natal", "KZN"]
+      lat: -29.8587
+      lng: 31.0218
+
+    - name: "Pretoria"
+      aliases: ["Tshwane", "Administrative Capital", "Jacaranda City"]
+      lat: -25.7479
+      lng: 28.2293
+
+    - name: "Port Elizabeth"
+      aliases: ["Gqeberha", "Nelson Mandela Bay", "Eastern Cape"]
+      lat: -33.9608
+      lng: 25.6022
+
+    - name: "Bloemfontein"
+      aliases: ["Mangaung", "Free State", "Judicial Capital"]
+      lat: -29.0852
+      lng: 26.1596
+
+    - name: "East London"
+      aliases: ["Buffalo City"]
+      lat: -33.0153
+      lng: 27.9116
+
+    - name: "Polokwane"
+      aliases: ["Pietersburg", "Limpopo"]
+      lat: -23.9045
+      lng: 29.4689
+
+    - name: "Nelspruit"
+      aliases: ["Mbombela", "Mpumalanga"]
+      lat: -25.4753
+      lng: 30.9694
+
+    - name: "Kimberley"
+      aliases: ["Northern Cape", "Diamond City"]
+      lat: -28.7282
+      lng: 24.7499

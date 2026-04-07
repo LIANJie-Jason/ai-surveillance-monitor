@@ -1,0 +1,571 @@
+# ============================================================================
+# RSS Feed Configuration for AI Surveillance News Monitor
+# ============================================================================
+# Tier rubric:
+#   1 = Wire services (highest reliability, broadest distribution)
+#   2 = Major international outlets
+#   3 = Specialty / digital-rights / cybersecurity
+#   4 = Regional sources (drill-down countries + non-English international)
+#
+# Feed URLs were batch-verified 2026-04-05 via scripts/verify_feeds.py
+# (see H14 in docs/BUGLOG.md). 60 of 64 feeds are live. 4 feeds marked
+# active: false were disabled because their publishers retired or paywalled
+# their RSS endpoints — reactivate them only after confirming a working URL.
+# Re-run the verifier periodically: `python scripts/verify_feeds.py`
+# ============================================================================
+
+feeds:
+
+  # --------------------------------------------------------------------------
+  # TIER 1 — Wire services (3 feeds)
+  # --------------------------------------------------------------------------
+  # NOTE: Reuters removed official public RSS in 2020. The FeedBurner mirror
+  # still resolves but titles itself "AllToc News" — content is Reuters wire.
+  # AFP has no public RSS feed.
+
+  - name: "Reuters World (FeedBurner mirror)"
+    url: "https://feeds.feedburner.com/Reuters/worldNews"
+    language: "en"
+    tier: 1
+    feed_type: "wire"
+    country_focus: null
+
+  # INACTIVE (H14, 2026-04-05): Reuters retired public RSS in 2020. Legacy
+  # endpoint returns HTTP 404; no supported replacement is available without
+  # a commercial API key. Kept here for historical context; re-enable only
+  # if Reuters restores a public endpoint.
+  - name: "Reuters World (official, legacy)"
+    url: "https://www.reuters.com/arc/outboundfeeds/v3/all/rss.xml"
+    language: "en"
+    tier: 1
+    feed_type: "wire"
+    country_focus: null
+    active: false
+
+  # INACTIVE (H14, 2026-04-05): rsshub.app aggressively rate-limits/blocks
+  # non-browser User-Agents (HTTP 403) and AP's own apnews.com endpoints
+  # require paid access. Re-enable if a reliable free AP feed appears.
+  - name: "AP Top News"
+    url: "https://rsshub.app/apnews/topics/apf-topnews"
+    language: "en"
+    tier: 1
+    feed_type: "wire"
+    country_focus: null
+    active: false
+
+  # --------------------------------------------------------------------------
+  # TIER 2 — Major international outlets (~10 feeds)
+  # --------------------------------------------------------------------------
+
+  # France 24 carries AFP wire content but is classified as Tier 2 major outlet
+  - name: "France 24 English"
+    url: "https://www.france24.com/en/rss"  # Verified 2026-04-05 (H14). France 24 carries AFP wire.
+    language: "en"
+    tier: 2
+    feed_type: "major"
+    country_focus: null
+
+  - name: "BBC World"
+    url: "https://feeds.bbci.co.uk/news/world/rss.xml"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  - name: "The Guardian World"
+    url: "https://www.theguardian.com/world/rss"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  - name: "NYT World"
+    url: "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  - name: "Al Jazeera English"
+    url: "https://www.aljazeera.com/xml/rss/all.xml"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  - name: "Washington Post World"
+    url: "https://feeds.washingtonpost.com/rss/world"  # Verified 2026-04-05 (H14). Intermittent UA blocks observed historically.
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  # Fixed (H14, 2026-04-05): rss.cnn.com presents a broken TLS chain
+  # (SSL_UNEXPECTED_EOF_WHILE_READING). The FeedBurner mirror serves the
+  # same CNN World content with a valid HTTPS cert.
+  - name: "CNN World"
+    url: "https://feeds.feedburner.com/CnnWorld"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  - name: "DW News"
+    url: "https://rss.dw.com/rdf/rss-en-all"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  - name: "BBC Technology"
+    url: "https://feeds.bbci.co.uk/news/technology/rss.xml"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  # Fixed (H14, 2026-04-05): /technology/rss redirects to /us/technology/rss
+  - name: "The Guardian Technology"
+    url: "https://www.theguardian.com/us/technology/rss"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  - name: "NYT Technology"
+    url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml"
+    language: "en"
+    tier: 2
+    feed_type: "international"
+    country_focus: null
+
+  # --------------------------------------------------------------------------
+  # TIER 3 — Specialty / digital rights / cybersecurity (~16 feeds)
+  # --------------------------------------------------------------------------
+
+  - name: "EFF Deeplinks"
+    url: "https://www.eff.org/rss/updates.xml"
+    language: "en"
+    tier: 3
+    feed_type: "digital_rights"
+    country_focus: null
+
+  - name: "The Intercept"
+    url: "https://theintercept.com/feed/?rss"
+    language: "en"
+    tier: 3
+    feed_type: "investigative"
+    country_focus: null
+
+  - name: "Access Now"
+    url: "https://www.accessnow.org/feed/"
+    language: "en"
+    tier: 3
+    feed_type: "digital_rights"
+    country_focus: null
+
+  - name: "Committee to Protect Journalists"
+    url: "https://cpj.org/feed/"
+    language: "en"
+    tier: 3
+    feed_type: "press_freedom"
+    country_focus: null
+
+  - name: "Citizen Lab"
+    url: "https://citizenlab.ca/feed/"
+    language: "en"
+    tier: 3
+    feed_type: "digital_rights"
+    country_focus: null
+
+  - name: "Ranking Digital Rights"
+    url: "https://rankingdigitalrights.org/feed/"
+    language: "en"
+    tier: 3
+    feed_type: "digital_rights"
+    country_focus: null
+
+  # Fixed (H14, 2026-04-05): /feed/ redirects to /feed/latest/
+  - name: "Rest of World"
+    url: "https://restofworld.org/feed/latest/"
+    language: "en"
+    tier: 3
+    feed_type: "tech_global"
+    country_focus: null
+
+  # Fixed (H14, 2026-04-05): /feed/ 308-redirects to /feed (no trailing slash)
+  - name: "The Record (Recorded Future)"
+    url: "https://therecord.media/feed"
+    language: "en"
+    tier: 3
+    feed_type: "cybersecurity"
+    country_focus: null
+
+  - name: "Wired Security"
+    url: "https://www.wired.com/feed/category/security/latest/rss"  # Verified 2026-04-05 (H14)
+    language: "en"
+    tier: 3
+    feed_type: "cybersecurity"
+    country_focus: null
+
+  - name: "Ars Technica — Policy"
+    url: "https://feeds.arstechnica.com/arstechnica/technology-lab"  # Verified 2026-04-05 (H14). Covers tech policy.
+    language: "en"
+    tier: 3
+    feed_type: "tech_policy"
+    country_focus: null
+
+  - name: "TechCrunch Security"
+    url: "https://techcrunch.com/category/security/feed/"
+    language: "en"
+    tier: 3
+    feed_type: "cybersecurity"
+    country_focus: null
+
+  - name: "Privacy International"
+    url: "https://privacyinternational.org/rss.xml"
+    language: "en"
+    tier: 3
+    feed_type: "digital_rights"
+    country_focus: null
+
+  # Fixed (H14, 2026-04-05): www.freedomhouse.org redirects to freedomhouse.org (no www)
+  - name: "Freedom House"
+    url: "https://freedomhouse.org/rss.xml"
+    language: "en"
+    tier: 3
+    feed_type: "democracy_rights"
+    country_focus: null
+
+  - name: "Global Voices"
+    url: "https://globalvoices.org/feed/"
+    language: "en"
+    tier: 3
+    feed_type: "citizen_media"
+    country_focus: null
+
+  # Fixed (H14, 2026-04-05): /english/rss2.xml redirects to outbound feeds path
+  - name: "Radio Free Asia"
+    url: "https://www.rfa.org/arc/outboundfeeds/english/rss/"
+    language: "en"
+    tier: 3
+    feed_type: "press_freedom"
+    country_focus: null
+
+  # Fixed (H14 round 3, 2026-04-05): RSF has no global RSS feed but publishes
+  # per-country feeds at /en/rss/{region}/{country}/feed.xml. Using the India
+  # feed (one of our four drill-down countries; 50 items). Other country feeds:
+  # /en/rss/afrique/nigeria/feed.xml, /en/rss/afrique/south-africa/feed.xml,
+  # /en/rss/asie-pacifique/malaysia/feed.xml — all verified working.
+  - name: "RSF India"
+    url: "https://rsf.org/en/rss/asie-pacifique/india/feed.xml"
+    language: "en"
+    tier: 3
+    feed_type: "press_freedom"
+    country_focus: "IN"
+
+  # CC2-H16: Add RSF feeds for all drill-down countries (symmetric coverage)
+  - name: "RSF Nigeria"
+    url: "https://rsf.org/en/rss/afrique/nigeria/feed.xml"
+    language: "en"
+    tier: 3
+    feed_type: "press_freedom"
+    country_focus: "NG"
+
+  - name: "RSF South Africa"
+    url: "https://rsf.org/en/rss/afrique/south-africa/feed.xml"
+    language: "en"
+    tier: 3
+    feed_type: "press_freedom"
+    country_focus: "ZA"
+
+  - name: "RSF Malaysia"
+    url: "https://rsf.org/en/rss/asie-pacifique/malaysia/feed.xml"
+    language: "en"
+    tier: 3
+    feed_type: "press_freedom"
+    country_focus: "MY"
+
+  - name: "Human Rights Watch"
+    url: "https://www.hrw.org/rss/news"
+    language: "en"
+    tier: 3
+    feed_type: "human_rights"
+    country_focus: null
+
+  - name: "Amnesty International"
+    url: "https://www.amnesty.org/en/feed/"
+    language: "en"
+    tier: 3
+    feed_type: "human_rights"
+    country_focus: null
+
+  - name: "Lawfare"
+    url: "https://www.lawfaremedia.org/feeds/articles"  # Per lawfaremedia.org/subscribe
+    language: "en"
+    tier: 3
+    feed_type: "law_security"
+    country_focus: null
+
+  # NOTE: SCMP also appears in Tier 4 regional as "South China Morning Post"
+  # (different section: /rss/91 = homepage, /rss/36 = technology). Intentional.
+  # Fixed (H14, 2026-04-05): SCMP requires trailing slash; without it 301s
+  - name: "SCMP Technology"
+    url: "https://www.scmp.com/rss/36/feed/"
+    language: "en"
+    tier: 3
+    feed_type: "tech_global"
+    country_focus: "CN"
+
+  - name: "NetBlocks"
+    url: "https://netblocks.org/feed"
+    language: "en"
+    tier: 3
+    feed_type: "specialty"
+    country_focus: null
+    # Internet shutdown monitoring
+
+  # INACTIVE (H14, 2026-04-05): OONI site no longer publishes an RSS feed.
+  # Tried /rss.xml, /atom.xml, /blog/feed.xml, /news/feed.xml — all HTTP 404.
+  # Re-enable if OONI adds a feed endpoint.
+  - name: "OONI"
+    url: "https://ooni.org/rss.xml"
+    language: "en"
+    tier: 3
+    feed_type: "specialty"
+    country_focus: null
+    active: false
+    # Censorship measurement
+
+  - name: "ARTICLE 19"
+    url: "https://www.article19.org/feed/"  # Verified 2026-04-05 (H14)
+    language: "en"
+    tier: 3
+    feed_type: "specialty"
+    country_focus: null
+    # Freedom of expression advocacy
+
+  # --------------------------------------------------------------------------
+  # TIER 4 — Regional: Malaysia (~4 feeds)
+  # --------------------------------------------------------------------------
+
+  - name: "Malaysiakini (EN)"
+    url: "https://www.malaysiakini.com/rss/en/news.rss"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "MY"
+
+  - name: "Malaysiakini (BM)"
+    url: "https://www.malaysiakini.com/rss/my/news.rss"
+    language: "ms"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "MY"
+
+  # Fixed (H14, 2026-04-05): www.freemalaysiatoday.com/feed/ 308s to cms subdomain
+  - name: "Free Malaysia Today"
+    url: "https://cms.freemalaysiatoday.com/feed"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "MY"
+
+  # NOTE: The Star (thestar.com.my) RSS returned 404; Berita Harian
+  # (bharian.com.my) returned 403. Both appear to have discontinued RSS.
+  # Free Malaysia Today is substituted as a third Malaysian source.
+
+  # --------------------------------------------------------------------------
+  # TIER 4 — Regional: Nigeria (~3 feeds)
+  # --------------------------------------------------------------------------
+
+  - name: "Premium Times Nigeria"
+    url: "https://www.premiumtimesng.com/feed"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "NG"
+
+  # Fixed (H14, 2026-04-05): punchng.com/feed/ redirects to rss.punchng.com category endpoint
+  - name: "Punch Nigeria"
+    url: "https://rss.punchng.com/v1/category/latest_news"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "NG"
+
+  - name: "Vanguard Nigeria"
+    url: "https://www.vanguardngr.com/feed/"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "NG"
+
+  # NOTE: The Cable (thecable.ng) returned 403. Vanguard substituted.
+
+  # --------------------------------------------------------------------------
+  # TIER 4 — Regional: India (~4 feeds)
+  # --------------------------------------------------------------------------
+
+  # INACTIVE (H14, 2026-04-05): thewire.in/feed, /feed/, /rss, /feed.xml,
+  # /atom.xml all return HTTP 200 but zero entries — the site appears to
+  # serve a stub page via CDN WAF instead of a real feed. No alternative
+  # endpoint found. Re-enable if The Wire restores their feed.
+  - name: "The Wire India"
+    url: "https://thewire.in/feed"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "IN"
+    active: false
+
+  - name: "Indian Express — India"
+    url: "https://indianexpress.com/section/india/feed/"  # Verified 2026-04-05 (H14). Historical bot-UA blocks.
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "IN"
+
+  - name: "NDTV India"
+    url: "https://feeds.feedburner.com/ndtvnews-india-news"  # Verified 2026-04-05 (H14). Legacy FeedBurner mirror.
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "IN"
+
+  - name: "Times of India"
+    url: "https://timesofindia.indiatimes.com/rssfeeds/-2128936835.cms"  # Verified 2026-04-05 (H14)
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "IN"
+
+  # NOTE: Scroll.in returned 403 — may have removed RSS. The Hindu also
+  # blocked. Dainik Bhaskar and NDTV Hindi do not offer public RSS feeds.
+
+  # --------------------------------------------------------------------------
+  # TIER 4 — Regional: South Africa (~3 feeds)
+  # --------------------------------------------------------------------------
+
+  # Fixed (H14, 2026-04-05): /feed/ returns 403 to the monitor's UA; /dmrss/
+  # is Daily Maverick's bot-friendly endpoint.
+  - name: "Daily Maverick"
+    url: "https://www.dailymaverick.co.za/dmrss/"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "ZA"
+
+  # Fixed (H14, 2026-04-05): feeds.news24.com 301s to feeds.capi24.com path
+  - name: "News24 South Africa"
+    url: "https://feeds.capi24.com/v1/Search/articles/news24/TopStories/rss"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "ZA"
+
+  - name: "Mail & Guardian"
+    url: "https://mg.co.za/feed/"
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "ZA"
+
+  # --------------------------------------------------------------------------
+  # TIER 4 — Non-English international (~10 feeds)
+  # --------------------------------------------------------------------------
+
+  # Chinese
+  # NOTE: SCMP also appears in Tier 3 as "SCMP Technology" (different section).
+  # Fixed (H14, 2026-04-05): trailing slash required
+  - name: "South China Morning Post"
+    url: "https://www.scmp.com/rss/91/feed/"
+    language: "en"  # English-language feed, categorized under regional for organizational purposes
+    tier: 4
+    feed_type: "regional"
+    country_focus: "CN"
+
+  # NOTE: Caixin does not offer a public RSS feed. SCMP (English) is the
+  # best available proxy for China-focused English-language reporting.
+
+  # Russian
+  - name: "Meduza (EN)"
+    url: "https://meduza.io/rss/en/all"
+    language: "en"  # English-language feed, categorized under regional for organizational purposes
+    tier: 4
+    feed_type: "regional"
+    country_focus: "RU"
+
+  # Arabic
+  # Fixed (H14, 2026-04-05): /feed 301s to the specific Arabic news endpoint
+  - name: "Al Jazeera Arabic"
+    url: "https://www.aljazeera.net/aljazeerarss/a7c186be-1baa-4bd4-9d80-a84db769f779/73d0e1b4-532f-45ef-b135-bfdff8b8cab9"
+    language: "ar"
+    tier: 4
+    feed_type: "regional"
+    country_focus: null
+
+  # Farsi
+  # NOTE: IranWire was in maintenance mode (feed returned HTML maintenance page).
+  # Radio Farda (RFE/RL) returned 403 on its API RSS endpoint.
+  # Substituting VOA Persian and Iran International where available.
+
+  - name: "IranWire (EN)"
+    url: "https://iranwire.com/en/feed/"  # Verified 2026-04-05 (H14). Previously intermittent.
+    language: "en"  # English-language feed, categorized under regional for organizational purposes
+    tier: 4
+    feed_type: "regional"
+    country_focus: "IR"
+
+  - name: "Radio Farda"
+    url: "https://en.radiofarda.com/api/zp_qmtl-vomx-tpe_bimr"  # Per en.radiofarda.com/rssfeeds (Iran News)
+    language: "en"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "IR"
+
+  # French
+  - name: "Le Monde International"
+    url: "https://www.lemonde.fr/international/rss_full.xml"  # Verified 2026-04-05 (H14). Historical bot blocks.
+    language: "fr"
+    tier: 4
+    feed_type: "international"
+    # country_focus intentionally null — this is a world news feed, not France-specific
+
+  # Fixed (H14, 2026-04-05): .xml suffix returns 404; /en/rss is the working path
+  - name: "RFI (Radio France Internationale)"
+    url: "https://www.rfi.fr/en/rss"
+    language: "en"  # English-language feed, categorized under regional for organizational purposes
+    tier: 4
+    feed_type: "regional"
+    country_focus: null
+
+  # Additional non-English international
+
+  - name: "DW Arabic"
+    url: "https://rss.dw.com/rdf/rss-ar-all"  # Verified 2026-04-05 (H14)
+    language: "ar"
+    tier: 4
+    feed_type: "regional"
+    country_focus: null
+
+  - name: "BBC Arabic"
+    url: "https://feeds.bbci.co.uk/arabic/rss.xml"
+    language: "ar"
+    tier: 4
+    feed_type: "regional"
+    country_focus: null
+
+  - name: "BBC Persian"
+    url: "https://feeds.bbci.co.uk/persian/rss.xml"
+    language: "fa"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "IR"
+
+  - name: "BBC Hindi"
+    url: "https://feeds.bbci.co.uk/hindi/rss.xml"
+    language: "hi"
+    tier: 4
+    feed_type: "regional"
+    country_focus: "IN"

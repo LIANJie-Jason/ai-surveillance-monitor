@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>AI Surveillance Monitor — Globe View</title>
+  <script src="https://unpkg.com/deck.gl@9.1.8/dist.min.js" integrity="sha384-HGiUm4YLHW3nt/0loKSFFg9Lp+mypCx3rms03G28arjEANWuR+RreYt7RcZi8ubz" crossorigin="anonymous"></script>
+  <style>
+    body { margin: 0; padding: 0; background: #0d1117; overflow: hidden; }
+    #globe { width: 100%; height: 100vh; }
+    #tooltip {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+      background: rgba(22, 27, 34, 0.92);
+      color: #e6edf3;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      display: none;
+    }
+    #tooltip .tt-country { font-weight: 600; margin-bottom: 2px; }
+    #tooltip .tt-count { color: #f85149; }
+  </style>
+</head>
+<body>
+  <div id="globe"></div>
+  <div id="tooltip">
+    <div class="tt-country"></div>
+    <div class="tt-count"></div>
+  </div>
+
+  <script>
+    // Data injected by Streamlit via string replacement
+    const ARTICLE_DATA = __ARTICLE_DATA__;
+    const COUNTRIES_GEOJSON = __COUNTRIES_GEOJSON__;
+    const FOCUS_COUNTRIES = __FOCUS_COUNTRIES__;
+
+    const tooltip = document.getElementById('tooltip');
+
+    // ── Color & radius scales (same as flat map) ──────────────────────
+    const maxCount = ARTICLE_DATA.reduce((m, d) => Math.max(m, d.count || 0), 1);
+
+    function getColor(count) {
+      const t = Math.min(count / maxCount, 1);
+      return [
+        Math.round(255 + (248 - 255) * t),
+        Math.round(215 + (81 - 215) * t),
+        Math.round(0 + (73 - 0) * t),
+        200
+      ];
+    }
+
+    function getRadius(count) {
+      const t = Math.min(count / maxCount, 1);
+      return 20000 + t * 100000;
+    }
+
+    // ── Build a Set for fast focus-country lookup ──────────────────────
+    const focusSet = new Set(FOCUS_COUNTRIES);
+
+    // ── Tooltip helpers ───────────────────────────────────────────────
+    function showTooltip(x, y, countryText, countText) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (x + 12) + 'px';
+      tooltip.style.top = (y + 12) + 'px';
+      tooltip.querySelector('.tt-country').textContent = countryText;
+      tooltip.querySelector('.tt-count').textContent = countText || '';
+    }
+
+    function hideTooltip() {
+      tooltip.style.display = 'none';
+    }
+
+    // ── Layers ────────────────────────────────────────────────────────
+    const countryLayer = new deck.GeoJsonLayer({
+      id: 'country-polygons',
+      data: COUNTRIES_GEOJSON,
+      filled: true,
+      stroked: true,
+      getFillColor: feature => {
+        const iso2 = feature.properties.iso2 || feature.properties.ISO_A2 || '';
+        if (focusSet.has(iso2)) {
+          return [248, 81, 73, 120];
+        }
+        return [20, 25, 35, 200];
+      },
+      getLineColor: [40, 50, 65, 150],
+      getLineWidth: 1,
+      lineWidthMinPixels: 1,
+      pickable: true,
+      autoHighlight: true,
+      highlightColor: [255, 255, 255, 40],
+      onHover: info => {
+        if (info.object) {
+          const props = info.object.properties;
+          const name = props.NAME || props.ADMIN || 'Unknown';
+          const iso2 = props.iso2 || props.ISO_A2 || '';
+          const hint = focusSet.has(iso2) ? ' (click to drill down)' : '';
+          showTooltip(info.x, info.y, name + hint, '');
+        } else {
+          hideTooltip();
+        }
+      },
+      onClick: info => {
+        if (info.object) {
+          const iso2 = info.object.properties.iso2 || info.object.properties.ISO_A2 || '';
+          if (focusSet.has(iso2) && /^[A-Z]{2}$/.test(iso2)) {
+            // Legacy template: navigation is blocked in sandboxed iframes.
+            // Active path uses globe_component/index.html with Streamlit.setComponentValue().
+            console.log('Globe click (legacy template):', iso2);
+          }
+        }
+      }
+    });
+
+    const scatterLayer = new deck.ScatterplotLayer({
+      id: 'surveillance-scatter',
+      data: ARTICLE_DATA,
+      getPosition: d => [d.lng, d.lat],
+      getRadius: d => getRadius(d.count),
+      getFillColor: d => getColor(d.count),
+      pickable: true,
+      opacity: 0.8,
+      radiusMinPixels: 5,
+      radiusMaxPixels: 40,
+      onHover: info => {
+        if (info.object) {
+          const d = info.object;
+          showTooltip(
+            info.x, info.y,
+            d.country_name + ' (' + d.country_code + ')',
+            d.count + ' article' + (d.count !== 1 ? 's' : '')
+          );
+        } else {
+          hideTooltip();
+        }
+      }
+    });
+
+    // ── Auto-rotation state ───────────────────────────────────────────
+    const ROTATION_INCREMENT = 0.03;    // degrees per frame
+    const IDLE_RESUME_MS = 3000;        // resume after 3s idle
+    const MAX_ROTATION_MS = 60000;      // stop after 60s total
+
+    let currentLongitude = 30;
+    let rotating = true;
+    let idleTimer = null;
+    let rotationStartTime = Date.now();
+    let totalRotationElapsed = 0;
+    let deckInstance = null;
+
+    function pauseRotation() {
+      rotating = false;
+      if (idleTimer) clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        if (totalRotationElapsed < MAX_ROTATION_MS) {
+          rotating = true;
+          rotationStartTime = Date.now();
+        }
+      }, IDLE_RESUME_MS);
+    }
+
+    function animateRotation() {
+      requestAnimationFrame(animateRotation);
+
+      if (!rotating || document.hidden || !deckInstance) {
+        // Always update rotationStartTime so hidden-tab duration is not
+        // accumulated into totalRotationElapsed on resume (CC2-H9).
+        rotationStartTime = Date.now();
+        return;
+      }
+
+      const now = Date.now();
+      totalRotationElapsed += now - rotationStartTime;
+      rotationStartTime = now;
+
+      if (totalRotationElapsed >= MAX_ROTATION_MS) {
+        rotating = false;
+        return;
+      }
+
+      currentLongitude += ROTATION_INCREMENT;
+      if (currentLongitude > 180) currentLongitude -= 360;
+
+      deckInstance.setProps({
+        initialViewState: {
+          latitude: 20,
+          longitude: currentLongitude,
+          zoom: 1.2,
+          transitionDuration: 0
+        }
+      });
+    }
+
+    // ── Detect user interaction to pause rotation ─────────────────────
+    const interactionEvents = ['mousedown', 'wheel', 'touchstart', 'pointerdown'];
+    interactionEvents.forEach(evt => {
+      document.addEventListener(evt, pauseRotation, { passive: true });
+    });
+
+    // ── Visibility change — skip frames when tab hidden ───────────────
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && rotating) {
+        rotationStartTime = Date.now();
+      }
+    });
+
+    // ── Detect GlobeView availability and initialize ──────────────────
+    // deck.gl v9 standalone bundle exposes deck._GlobeView or deck.GlobeView
+    const GlobeView = deck.GlobeView || deck._GlobeView;
+
+    if (GlobeView) {
+      deckInstance = new deck.DeckGL({
+        container: 'globe',
+        views: new GlobeView({ resolution: 10 }),
+        initialViewState: {
+          latitude: 20,
+          longitude: 30,
+          zoom: 1.2
+        },
+        controller: true,
+        layers: [countryLayer, scatterLayer],
+        parameters: {
+          clearColor: [13 / 255, 17 / 255, 23 / 255, 1]
+        }
+      });
+
+      rotationStartTime = Date.now();
+      animateRotation();
+    } else {
+      // Fallback: if GlobeView is not in the standalone bundle, load via
+      // ES module imports from unpkg (deck.gl v9 supports this).
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.textContent = `
+        import {GlobeView} from 'https://unpkg.com/@deck.gl/core@9.1.8/dist/dist.min.js';
+        import {GeoJsonLayer} from 'https://unpkg.com/@deck.gl/layers@9.1.8/dist/dist.min.js';
+
+        // Re-create layers with the module imports
+        window.__globeReady && window.__globeReady(GlobeView);
+      `;
+
+      // Clean up any stale callback from a previous render (CC2-M11)
+      delete window.__globeReady;
+
+      window.__globeReady = function(GV) {
+        deckInstance = new deck.DeckGL({
+          container: 'globe',
+          views: new GV({ resolution: 10 }),
+          initialViewState: {
+            latitude: 20,
+            longitude: 30,
+            zoom: 1.2
+          },
+          controller: true,
+          layers: [countryLayer, scatterLayer],
+          parameters: {
+            clearColor: [13 / 255, 17 / 255, 23 / 255, 1]
+          }
+        });
+
+        rotationStartTime = Date.now();
+        animateRotation();
+        // Clean up global after use
+        delete window.__globeReady;
+      };
+
+      document.head.appendChild(script);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+# City webcam embeds for drill-down countries
+# Populated 2026-04-02 via manual URL research
+#
+# Embed strategies by priority:
+#   1. YouTube embed (most reliable for iframe in Streamlit)
+#   2. SkylineWebcams page URL (may need custom embed handling)
+#
+# type field: "webcam" = actual city camera, "news_fallback" = 24/7 news stream
+#   used as substitute when no embeddable city webcam exists for that location.
+#   The UI can render these differently (e.g., different icon on map pin).
+#
+# IMPORTANT: YouTube live-stream video IDs can change when streams restart.
+# If a YouTube embed stops working, search the source page for an updated ID.
+# SkylineWebcams IDs are stable; YouTube IDs extracted from their player are not.
+
+webcams:
+  IN:
+    # No SkylineWebcams coverage for major Indian cities (only Mount Abu, Nanded)
+    # Using YouTube embeds sourced from webcam aggregators
+    - city: "Delhi"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC_gUM8rL-Lrg6O3adPW9K1g"
+      type: "news_fallback"
+      lat: 28.6139
+      lng: 77.2090
+      source: "WION (news — Delhi NCR-based, 24/7 English)"
+      notes: >
+        No Delhi-specific live webcam found. Using WION (World Is One News),
+        headquartered in Noida (Delhi NCR). Channel-based URL is stable.
+        Distinct from IN primary (NDTV), IN fallback (India Today), and
+        Chennai (ABP News). Replace with a Delhi-specific cam if available.
+
+    - city: "Mumbai"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UCwqusr8YDwM-3mEYTDeJHzw"
+      type: "news_fallback"
+      lat: 19.0760
+      lng: 72.8777
+      source: "Republic World (news — Mumbai-based, 24/7 English)"
+      notes: >
+        No Mumbai-specific live webcam found. Using Republic World,
+        headquartered in Mumbai. Channel-based URL is stable.
+        Distinct from all other IN streams. Replace with a Mumbai-specific
+        cam if available.
+
+    - city: "Bangalore"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC8dnBi4WUErqYQHZ4PfsLTg"
+      type: "news_fallback"
+      lat: 12.9716
+      lng: 77.5946
+      source: "TV9 Kannada (news — Bangalore-based, 24/7 Kannada)"
+      notes: >
+        No Bangalore-specific live webcam found. Using TV9 Kannada,
+        the leading Kannada-language news channel based in Bangalore.
+        Channel-based URL is stable. Distinct from all other IN streams.
+        Replace with a Bangalore-specific cam if available.
+
+    - city: "Chennai"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UCt4t-jeY85JegMlZ-E5UXtA"
+      type: "news_fallback"
+      lat: 13.0827
+      lng: 80.2707
+      source: "ABP News (news fallback)"
+      notes: >
+        No Chennai-specific live webcam found. Using ABP News 24/7 Hindi
+        news stream — distinct from both IN primary (NDTV) and IN fallback
+        (India Today). Replace with a Chennai-specific cam if available.
+
+  MY:
+    - city: "Kuala Lumpur"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC1WeWxoUU85aTdWaGtXOFlG"
+      type: "news_fallback"
+      lat: 3.1390
+      lng: 101.6869
+      source: "TV3 Malaysia (news — distinct from MY primary and fallback streams)"
+      notes: >
+        SkylineWebcams KL cam (SWC ID 2566) uses X-Frame-Options: SAMEORIGIN.
+        Using TV3 Malaysia — distinct from both Astro Awani (MY primary) and
+        Bernama TV (MY fallback) so drill-down won't show duplicate feeds.
+
+    - city: "Penang"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC2CzLwbhTiI8pTKNVyrOnJQ"
+      type: "news_fallback"
+      lat: 5.4164
+      lng: 100.3327
+      source: "Free Malaysia Today (news — Malaysian independent, English/Malay)"
+      notes: >
+        No Penang-specific live webcam found. Using FMT (Free Malaysia Today).
+        Channel-based URL is stable. Distinct from MY primary (Astro Awani),
+        MY fallback (Bernama TV), and KL webcam (TV3). Replace with a
+        Penang-specific cam if available.
+
+    - city: "Johor Bahru"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC83jt4dlz1Gjl58fzQrrKZg"
+      type: "news_fallback"
+      lat: 1.4927
+      lng: 103.7414
+      source: "CNA — Channel News Asia (news — Singapore-based, covers Malaysia)"
+      notes: >
+        No JB-specific live webcam found. Using CNA (Channel News Asia),
+        Singapore-based, covers Malaysian news extensively. JB is directly
+        across the causeway from Singapore. Channel-based URL is stable.
+        Distinct from all other MY streams. Replace with a JB-specific cam
+        if available.
+
+  NG:
+    # No SkylineWebcams coverage for Nigeria. Webcam infrastructure is sparse.
+    # Nigeria has very few publicly embeddable live webcams.
+    - city: "Lagos"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC0WMhFknxSjzGMqnmnMh9cg"
+      type: "news_fallback"
+      lat: 6.5244
+      lng: 3.3792
+      source: "Arise News (news — distinct from NG primary/fallback streams)"
+      notes: >
+        No public webcam exists for Lagos. Using Arise News 24/7 — distinct
+        from both NG primary (Channels TV) and NG fallback (TVC News) so
+        drill-down won't show duplicate feeds.
+
+    - city: "Abuja"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UCdnCWh3_aFm0kDBI6h3vCRw"
+      type: "news_fallback"
+      lat: 9.0579
+      lng: 7.4951
+      source: "AIT (news — distinct from NG primary/fallback streams)"
+      notes: >
+        No public webcam exists for Abuja. Using African Independent
+        Television (AIT) 24/7 — distinct from NG primary (Channels TV),
+        NG fallback (TVC News), and Lagos webcam (Arise News).
+
+  ZA:
+    - city: "Cape Town"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC9Ljd016Si9rv3KS-5CbpGg"
+      type: "webcam"
+      lat: -33.9249
+      lng: 18.4241
+      source: "Vanilla ISP (webcam — Table Mountain, Signal Hill, Cape Town CBD)"
+      notes: >
+        Real webcam channel — Vanilla ISP runs 24/7 live streams from rooftop
+        antennas showing Table Mountain, Signal Hill, and Cape Town CBD.
+        Channel-based URL is stable. Replaces broken SkylineWebcams video ID.
+
+    - city: "Johannesburg"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC1_E8NeF5QHY2dtdLRBCCLA"
+      type: "news_fallback"
+      lat: -26.2041
+      lng: 28.0473
+      source: "africanews (news — pan-African, 24/7 English)"
+      notes: >
+        No Johannesburg-specific live webcam found. Using africanews,
+        a 24/7 pan-African English-language news channel. Channel-based URL
+        is stable. Distinct from ZA primary (eNCA), ZA fallback (Newzroom
+        Afrika), and Durban webcam (SABC News). Replace with a Joburg-specific
+        cam if available.
+
+    - city: "Durban"
+      embed_url: "https://www.youtube.com/embed/live_stream?channel=UC8yH-uI81UUtEMDsowQyx1g"
+      type: "news_fallback"
+      lat: -29.8587
+      lng: 31.0218
+      source: "SABC News (news — distinct from ZA primary and fallback streams)"
+      notes: >
+        SkylineWebcams Ballito cam (SWC ID 666) uses X-Frame-Options:
+        SAMEORIGIN. Using SABC News — distinct from both eNCA (ZA primary)
+        and Newzroom Afrika (ZA fallback) so drill-down won't show duplicate.

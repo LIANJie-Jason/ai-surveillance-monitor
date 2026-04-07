@@ -1,0 +1,367 @@
+/* =============================================================
+   AI Surveillance News Monitor — Dark Command-Center Theme
+   =============================================================
+   Color palette:
+     Background:  #0d1117
+     Card/panel:  #161b22
+     Border:      #30363d
+     Text:        #e6edf3
+     Muted text:  #8b949e
+     Accent red:  #f85149  (high confidence >= 0.8)
+     Accent orange: #d29922  (medium confidence 0.6–0.8)
+     Accent green:  #3fb950  (success / active)
+     Accent blue:   #58a6ff  (links / interactive)
+   ============================================================= */
+
+/* --- Global background & text --- */
+.stApp {
+    background-color: #0d1117 !important;
+    color: #e6edf3 !important;
+}
+
+.stApp p,
+.stApp .stMarkdown p,
+.stApp li {
+    color: #e6edf3;
+}
+
+/* --- Sidebar --- */
+section[data-testid="stSidebar"] {
+    background-color: #161b22;
+    border-right: 1px solid #30363d;
+}
+
+section[data-testid="stSidebar"] .stMarkdown p,
+section[data-testid="stSidebar"] .stMarkdown li,
+section[data-testid="stSidebar"] label {
+    color: #e6edf3;
+}
+
+/* --- Header / title --- */
+.stApp header[data-testid="stHeader"] {
+    background-color: #0d1117;
+    border-bottom: 1px solid #30363d;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #e6edf3 !important;
+}
+
+/* --- Metric cards --- */
+div[data-testid="stMetric"] {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+div[data-testid="stMetric"] label {
+    color: #8b949e;
+}
+
+div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+    color: #e6edf3;
+}
+
+div[data-testid="stMetric"] div[data-testid="stMetricDelta"] svg {
+    fill: #3fb950;
+}
+
+/* --- Card-like containers (st.container, expander) --- */
+div[data-testid="stExpander"] {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+}
+
+div[data-testid="stExpander"] summary {
+    color: #e6edf3;
+}
+
+/* --- Scrollable news feed container --- */
+.news-feed {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.news-feed::-webkit-scrollbar {
+    width: 6px;
+}
+
+.news-feed::-webkit-scrollbar-track {
+    background: #0d1117;
+}
+
+.news-feed::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 3px;
+}
+
+.news-feed::-webkit-scrollbar-thumb:hover {
+    background: #484f58;
+}
+
+/* --- Article cards --- */
+.article-card {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+}
+
+.article-card:hover {
+    border-color: #58a6ff;
+}
+
+.article-card .article-title {
+    color: #e6edf3;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.article-card .article-title a {
+    color: #58a6ff;
+    text-decoration: none;
+}
+
+.article-card .article-title a:hover {
+    text-decoration: underline;
+}
+
+.article-card .article-meta {
+    color: #8b949e;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.article-card .article-summary {
+    color: #c9d1d9;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+/* --- Confidence badges --- */
+.confidence-high {
+    color: #f85149;
+    font-weight: 700;
+}
+
+.confidence-medium {
+    color: #d29922;
+    font-weight: 600;
+}
+
+/* --- Category tags --- */
+.category-tag {
+    display: inline-block;
+    background-color: #21262d;
+    color: #8b949e;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 0.78rem;
+    margin-right: 6px;
+}
+
+/* --- Country drill-down buttons --- */
+.country-btn {
+    display: inline-block;
+    background-color: #21262d;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 8px 16px;
+    margin: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.country-btn:hover {
+    background-color: #30363d;
+    border-color: #58a6ff;
+}
+
+.country-btn.active {
+    background-color: #1f6feb;
+    border-color: #58a6ff;
+    color: #ffffff;
+}
+
+/* --- Status indicators --- */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-dot.active {
+    background-color: #3fb950;
+}
+
+.status-dot.stale {
+    background-color: #d29922;
+}
+
+.status-dot.error {
+    background-color: #f85149;
+}
+
+/* --- Streamlit buttons --- */
+.stButton > button {
+    background-color: #21262d;
+    color: #e6edf3;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+}
+
+.stButton > button:hover {
+    background-color: #30363d;
+    border-color: #58a6ff;
+    color: #ffffff;
+}
+
+/* --- Selectbox / multiselect --- */
+div[data-baseweb="select"] {
+    background-color: #161b22;
+}
+
+div[data-baseweb="select"] > div {
+    background-color: #161b22;
+    border-color: #30363d;
+    color: #e6edf3;
+}
+
+div[data-baseweb="select"] span {
+    color: #e6edf3 !important;
+}
+
+/* --- Dropdown popover / listbox --- */
+div[data-baseweb="popover"] {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+}
+
+ul[role="listbox"] {
+    background-color: #161b22 !important;
+}
+
+ul[role="listbox"] li {
+    color: #e6edf3 !important;
+    background-color: #161b22 !important;
+}
+
+ul[role="listbox"] li:hover,
+ul[role="listbox"] li[aria-selected="true"] {
+    background-color: #30363d !important;
+}
+
+/* --- Date picker --- */
+div[data-baseweb="datepicker"] {
+    background-color: #161b22 !important;
+    color: #e6edf3 !important;
+}
+
+div[data-baseweb="datepicker"] div[data-baseweb="calendar"] {
+    background-color: #161b22 !important;
+}
+
+div[data-baseweb="datepicker"] button {
+    color: #e6edf3 !important;
+}
+
+div[data-baseweb="datepicker"] div[role="gridcell"] > div {
+    color: #e6edf3 !important;
+}
+
+div[data-baseweb="datepicker"] div[role="gridcell"] > div:hover {
+    background-color: #30363d !important;
+}
+
+/* --- Text inputs / number inputs --- */
+div[data-baseweb="input"] {
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
+}
+
+div[data-baseweb="input"] input {
+    color: #e6edf3 !important;
+    background-color: #161b22 !important;
+}
+
+/* --- Textarea --- */
+div[data-baseweb="textarea"] textarea {
+    color: #e6edf3 !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
+}
+
+/* --- Progress bar --- */
+div[data-testid="stProgressBar"] > div {
+    background-color: #30363d;
+}
+
+div[data-testid="stProgressBar"] > div > div {
+    background-color: #58a6ff;
+}
+
+/* --- Spinner text --- */
+div[data-testid="stSpinner"] p {
+    color: #8b949e;
+}
+
+/* --- Tabs --- */
+.stTabs [data-baseweb="tab-list"] {
+    border-bottom: 1px solid #30363d;
+}
+
+.stTabs [data-baseweb="tab"] {
+    color: #8b949e;
+}
+
+.stTabs [aria-selected="true"] {
+    color: #e6edf3;
+    border-bottom-color: #58a6ff;
+}
+
+/* --- Dividers --- */
+hr {
+    border-color: #30363d;
+}
+
+/* --- DataFrames / tables --- */
+.stDataFrame {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    color: #e6edf3;
+}
+
+.stDataFrame [data-testid="stDataFrameResizable"] td,
+.stDataFrame [data-testid="stDataFrameResizable"] th {
+    color: #e6edf3 !important;
+    background-color: #161b22 !important;
+}
+
+/* --- Toast / alert --- */
+div[data-testid="stAlert"] {
+    background-color: #161b22;
+    border: 1px solid #30363d;
+    color: #e6edf3;
+}
+
+/* --- Live stream embed area --- */
+.live-stream-container {
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 4px;
+}
+
+/* Webcam grid uses inline styles in webcams.py — these classes are unused. */

@@ -283,7 +283,9 @@ def _render_sidebar(db: Database) -> dict[str, Any]:
             if cc in DRILL_DOWN_COUNTRIES
         }
         country_options = get_country_options(country_counts)
-        country_raw = st.selectbox("Country", country_options, index=0)
+        country_raw = st.selectbox(
+            "Country (focus countries only)", country_options, index=0,
+        )
         country = parse_country_option(country_raw)
 
         st.markdown("---")
@@ -446,11 +448,12 @@ def main() -> None:
 
             else:
                 # ── GLOBAL VIEW ──────────────────────────────────────
-                global_params = {
-                    k: v for k, v in filter_params.items()
-                    if k != "country_code"
-                }
-                global_params["country_codes"] = list(DRILL_DOWN_COUNTRIES)
+                global_params = dict(filter_params)
+                sidebar_country = global_params.pop("country_code", None)
+                if sidebar_country and sidebar_country in DRILL_DOWN_COUNTRIES:
+                    global_params["country_code"] = sidebar_country
+                else:
+                    global_params["country_codes"] = list(DRILL_DOWN_COUNTRIES)
                 articles = db.get_flagged_articles(**global_params, limit=50)
 
                 # Global summary

@@ -368,7 +368,7 @@ class Classifier:
                     is_surveillance=False,
                     confidence=None,
                     category="other",
-                    llm_provider="failed",
+                    llm_provider="retry",
                 ))
                 continue
 

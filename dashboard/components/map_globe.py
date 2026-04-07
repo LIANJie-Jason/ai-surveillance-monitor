@@ -4,11 +4,11 @@ Renders a 3D rotating globe using deck.gl GlobeView with:
 - GeoJsonLayer for country polygon boundaries (focus countries highlighted)
 - ScatterplotLayer for article markers (count-based color/size)
 - Auto-rotation with pause-on-interaction and idle resume
-- Click-to-drill-down: clicking a focus country returns its ISO-2 code
-  to Streamlit via the bidirectional component protocol.
+- Display-only: country navigation is handled by Streamlit buttons,
+  not globe clicks.
 
 Uses ``streamlit.components.v1.declare_component`` for bidirectional
-communication (the globe iframe can send values back to Python).
+communication (the globe iframe receives render data from Python).
 """
 
 from __future__ import annotations
@@ -154,16 +154,15 @@ def render_globe(
     key: str | None = None,
     selected_country: str | None = None,
 ) -> str | None:
-    """Render the interactive globe and return the clicked country code.
+    """Render the globe visualization.
 
-    Uses ``declare_component`` for bidirectional communication: the globe
-    iframe sends the ISO-2 country code back to Python when a focus
-    country polygon is clicked.
+    The globe is display-only — country navigation is handled by
+    Streamlit buttons in app.py, not by globe polygon clicks.
 
     When ``selected_country`` is set, the globe flies to that country
     and overlays admin-1 boundaries.
 
-    Returns the ISO-2 country code if a focus country was clicked, else None.
+    Returns the component value (currently unused — navigation via buttons).
     """
     countries_geojson = _load_countries_geojson()
     if countries_geojson is None:

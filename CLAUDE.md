@@ -114,7 +114,7 @@ python scripts/run_ingestion.py --interval 600 --log-level DEBUG
 ## Testing
 
 ```bash
-# Run all tests (610 tests)
+# Run all tests (695 tests)
 python -m pytest tests/ -q
 
 # Run specific test file
@@ -123,7 +123,7 @@ python -m pytest tests/test_scripts.py -v
 
 ## Status
 
-25 modules implemented. 610 tests passing across 24 test files.
+25 modules implemented. 695 tests passing across 25 test files.
 
 | Module | Status |
 |--------|--------|

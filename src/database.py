@@ -97,7 +97,8 @@ class Database:
                 region          TEXT,
                 summary_en      TEXT,
                 classified_at   TEXT,
-                llm_provider    TEXT
+                llm_provider    TEXT,
+                classify_attempts INTEGER DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS feeds (
@@ -119,6 +120,15 @@ class Database:
             CREATE INDEX IF NOT EXISTS idx_articles_fetched
                 ON articles(fetched_at);
         """)
+
+        # Migration: add classify_attempts column to existing databases
+        try:
+            self._conn.execute(
+                "ALTER TABLE articles ADD COLUMN classify_attempts INTEGER DEFAULT 0"
+            )
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
         self._conn.commit()
 
     def close(self) -> None:
@@ -155,8 +165,9 @@ class Database:
         id, url, title, title_en, source_name, source_lang,
         source_tier, published_at, fetched_at, content_snippet,
         is_surveillance, confidence, category, country_code,
-        country_name, region, summary_en, classified_at, llm_provider
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        country_name, region, summary_en, classified_at, llm_provider,
+        classify_attempts
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
         title           = COALESCE(excluded.title, articles.title),
         title_en        = COALESCE(excluded.title_en, articles.title_en),
@@ -171,7 +182,11 @@ class Database:
         region          = COALESCE(excluded.region, articles.region),
         summary_en      = COALESCE(excluded.summary_en, articles.summary_en),
         classified_at   = COALESCE(excluded.classified_at, articles.classified_at),
-        llm_provider    = COALESCE(excluded.llm_provider, articles.llm_provider)
+        llm_provider    = COALESCE(excluded.llm_provider, articles.llm_provider),
+        classify_attempts = CASE
+            WHEN excluded.confidence IS NOT NULL THEN 0
+            ELSE articles.classify_attempts + 1
+        END
     """
 
     @staticmethod
@@ -197,6 +212,7 @@ class Database:
             a.summary_en,
             a.classified_at.isoformat() if a.classified_at else None,
             a.llm_provider,
+            a.classify_attempts,
         )
 
     def upsert_article(self, a: Article) -> None:
@@ -243,14 +259,13 @@ class Database:
     def article_needs_classification(self, article_id: str) -> bool:
         """Return True if the article exists but has no LLM classification.
 
-        Articles with ``confidence IS NULL`` and ``llm_provider != 'failed'``
-        were stored during a failed classification attempt and should be
-        re-classified on the next run. Articles marked ``llm_provider='failed'``
-        have exhausted retries and will not be re-queued.
+        Articles with ``confidence IS NULL`` and fewer than 3 classification
+        attempts should be re-classified on the next run. Articles with 3+
+        attempts have exhausted retries and will not be re-queued.
         """
         row = self._conn.execute(
             "SELECT 1 FROM articles WHERE id = ? AND confidence IS NULL "
-            "AND (llm_provider IS NULL OR llm_provider != 'failed')",
+            "AND classify_attempts < 3",
             (article_id,),
         ).fetchone()
         return row is not None
@@ -441,4 +456,5 @@ class Database:
             summary_en=row["summary_en"],
             classified_at=cls._parse_dt(row["classified_at"]),
             llm_provider=row["llm_provider"],
+            classify_attempts=(row["classify_attempts"] or 0) if "classify_attempts" in row.keys() else 0,
         )

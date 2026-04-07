@@ -176,19 +176,24 @@
       currentAdmin1Geojson = null;
       backBtn.style.display = 'none';
       countryLabel.style.display = 'none';
-      rotating = true;
+      // Keep rotation paused during the fly-back transition
+      rotating = false;
+      if (idleTimer) clearTimeout(idleTimer);
 
       if (!deckInstance) return;
       deckInstance.setProps({
         initialViewState: {
           latitude: 20, longitude: currentLongitude,
-          zoom: 1.2, transitionDuration: 1000,
+          zoom: 1.2, transitionDuration: 1400,
           transitionInterpolator: new deck.FlyToInterpolator()
         }
       });
 
       rebuildLayers();
       Streamlit.setComponentValue(null);
+
+      // Resume rotation after the fly-back transition completes
+      idleTimer = setTimeout(function() { rotating = true; }, 1600);
     }
 
     // ── Layer building ──────────────────────────────────────────────────
@@ -221,18 +226,18 @@
         filled: true, stroked: true,
         getFillColor: function(f) {
           var iso2 = f.properties.iso2 || f.properties.ISO_A2 || '';
-          if (currentSelectedCountry && iso2 === currentSelectedCountry) return [248, 81, 73, 160];
-          if (focusSet.has(iso2)) return [248, 81, 73, 80];
-          return [20, 25, 35, 200];
+          if (currentSelectedCountry && iso2 === currentSelectedCountry) return [248, 81, 73, 200];
+          if (focusSet.has(iso2)) return [248, 81, 73, 120];
+          return [48, 56, 72, 220];
         },
         getLineColor: function(f) {
           var iso2 = f.properties.iso2 || f.properties.ISO_A2 || '';
-          if (currentSelectedCountry && iso2 === currentSelectedCountry) return [248, 81, 73, 200];
-          return [40, 50, 65, 150];
+          if (currentSelectedCountry && iso2 === currentSelectedCountry) return [248, 81, 73, 230];
+          return [75, 88, 108, 200];
         },
         getLineWidth: 1, lineWidthMinPixels: 1,
         pickable: true, autoHighlight: true,
-        highlightColor: [255, 255, 255, 40],
+        highlightColor: [255, 255, 255, 60],
         updateTriggers: {
           getFillColor: [currentSelectedCountry],
           getLineColor: [currentSelectedCountry]

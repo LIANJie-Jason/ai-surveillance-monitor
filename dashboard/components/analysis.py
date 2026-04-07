@@ -235,7 +235,7 @@ def render_global_summary(country_counts: dict[str, int], total: int) -> str:
         f'<div style="display:flex;flex-wrap:wrap;gap:4px;">{top_html}</div>'
         f'</div>'
         f'<div style="color:#8b949e;font-size:11px;margin-top:8px;text-align:center;">'
-        f'Click a highlighted country on the globe to drill down</div>'
+        f'Use the country buttons below to drill down</div>'
         f'</div>'
     )
 

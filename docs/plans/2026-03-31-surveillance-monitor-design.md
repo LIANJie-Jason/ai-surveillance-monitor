@@ -351,5 +351,5 @@ schedule
 1. Run `python scripts/init_db.py` to create database
 2. Run `python scripts/seed_data.py` to load curated articles
 3. Run `streamlit run dashboard/app.py` to launch dashboard
-4. (Optional) Run `python -m src.ingestion` in background for live polling
+4. (Optional) Run `python scripts/run_ingestion.py` in background for live polling
 5. Demo: show global map -> click India -> see drill-down with live NDTV + city webcams + filtered news

@@ -26,6 +26,7 @@ _REQUEST_TIMEOUT = 15
 _BATCH_SIZE = 10
 _MAX_ARTICLES_PER_FEED = 100  # Cap per-feed to prevent LLM cost amplification
 _MAX_ARTICLES_PER_RUN = 500   # Global cap per ingestion run
+_SUMMARIZE_CONFIDENCE_THRESHOLD = 0.6  # Only summarize above this confidence
 
 # ---------------------------------------------------------------------------
 # DNS pinning — closes the TOCTOU gap between SSRF validation and HTTP fetch.
@@ -62,11 +63,13 @@ def _pin_dns(hostname: str, validated_ip: str):
             _pinned_hosts.pop(hostname, None)
 
 
-def _default_result(provider: str = "failed") -> ClassificationResult:
+def _default_result(provider: str = "retry") -> ClassificationResult:
     """Default classification for articles when LLM classification fails.
 
     Uses ``confidence=None`` so the database CASE guard does not overwrite
     existing classification data (see database.py upsert_article).
+    The database increments ``classify_attempts`` on each failed upsert;
+    after 3 attempts the article is excluded by ``article_needs_classification``.
     """
     return ClassificationResult(
         is_surveillance=False,
@@ -252,7 +255,9 @@ class IngestionWorker:
                 llm_provider=result.llm_provider,
             )
 
-            if result.is_surveillance:
+            if (result.is_surveillance
+                    and result.confidence is not None
+                    and result.confidence >= _SUMMARIZE_CONFIDENCE_THRESHOLD):
                 try:
                     summary_en, title_en = self._summarizer.summarize(article)
                     updated = replace(

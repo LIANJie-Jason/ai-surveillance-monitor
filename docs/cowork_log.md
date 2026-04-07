@@ -1010,3 +1010,59 @@ Open accepted MEDIUMs (unchanged):
 ## Project Status
 
 All 20 modules implemented, audited, and passing. **431 tests** across 19 test files. All CRITICAL and HIGH bugs fixed (15/15). 27 of 30 MEDIUM bugs fixed (3 accepted deviations). Re-audit round fully resolved. The prototype supports seeded demo mode, live RSS ingestion (57 verified feeds), and full dashboard interactivity with country/date/category/confidence filters.
+
+---
+
+## Session 8 — 2026-04-07
+
+### Phase: Multi-Agent Re-Evaluation After Major Code Update
+
+**Workflow:** Re-read all current plan documents before inspecting code:
+- `docs/plans/2026-03-31-surveillance-monitor-design.md`
+- `docs/plans/2026-03-31-surveillance-monitor-implementation.md`
+- `docs/plans/2026-04-07-command-center-redesign.md`
+
+Then ran a four-agent read-only audit:
+- A2 plan/design alignment monitor
+- A3 code and error inspector
+- A4 logic/integration inspector
+- A5 anti-hallucination/reproducibility inspector
+
+Each agent read the plans first, inspected code, then cross-checked the consolidated findings. No runtime code was changed.
+
+### Local Verification
+
+- `python -m pytest -q` — **693 passed in 4.15s**
+- `python scripts/init_db.py --db /tmp/ai_surveillance_audit_2.db --config config/feeds.yaml --clean` — **60 active feeds loaded**
+- Temp seed smoke — **79/79 articles seeded**, DB had **79 articles** and **60 active feeds**
+- `python -m py_compile src/*.py scripts/*.py dashboard/app.py dashboard/components/*.py` — passed
+- `python -m src.ingestion --once` — exits `0` but performs no work
+- No live browser/RSS/YouTube network checks were run in this pass
+
+### Cross-Checked Findings
+
+**HIGH**
+- Threshold enforcement still conflicts with the plan: classifier preserves raw `is_surveillance=True` below `0.6`, and ingestion summarizes on that raw flag. Tests currently encode the raw-preservation behavior.
+- April 7 globe click-to-drilldown is not implemented: active JS has no polygon `onClick`, and `dashboard/app.py` ignores `render_globe()` return values.
+- Classification failures are terminal on first attempt: `_default_result(llm_provider="failed")` plus `article_needs_classification()` prevents retry of transient malformed/empty LLM responses.
+
+**MEDIUM**
+- Global globe and global summary filter to `DRILL_DOWN_COUNTRIES`, hiding non-focus seed countries despite the April 7 "all article dots" requirement.
+- Sidebar country filter is misleading in global view because global mode strips `country_code` and forces `country_codes=list(DRILL_DOWN_COUNTRIES)`.
+- Live media remains brittle: direct video IDs are skipped by the resolver, fallback streams are configured but not automatically used, South Africa uses `africanews` rather than planned eNCA, and most "webcams" are news fallbacks or empty placeholders.
+- GDELT enrichment is still unimplemented.
+- `python -m src.ingestion --once` and `IngestionWorker.run_scheduled()` remain absent from `src.ingestion`; `scripts/run_ingestion.py` is the real CLI.
+
+**LOW / ACCEPTED SCOPE**
+- Seed dataset remains 79 rather than the original ~200 planned articles; now documented as an accepted quality-over-quantity scope reduction.
+- Seed `fetched_at` uses load time rather than `published_at`; lower impact because dashboard queries use `published_at`.
+- README/CLAUDE/BUGLOG contain stale test-count and dynamic-stream-resolution claims; `requirements.txt` omits plan-listed `pydeck` and `schedule`, likely acceptable because current code does not use them directly.
+
+### Things Verified As Fixed/Consistent
+
+- SQLite read-only dashboard connection, `busy_timeout`, and WAL write-mode handling are implemented.
+- `get_flagged_articles()` and `get_country_counts()` default to `min_confidence=0.6`.
+- DB date filters use `published_at`.
+- Feed taxonomy is cleaner via `Feed.feed_type`; config has 64 feeds, 60 active.
+- Admin-1 GeoJSON files and globe overlay plumbing exist for `IN/MY/NG/ZA`.
+- Seed JSON loads idempotently and has no missing URLs or summaries.

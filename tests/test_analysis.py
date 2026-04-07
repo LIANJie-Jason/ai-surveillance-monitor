@@ -459,7 +459,7 @@ class TestRenderGlobalSummary:
         """Drill-down hint text appears."""
         from dashboard.components.analysis import render_global_summary
         result = render_global_summary({"IN": 5}, 10)
-        assert "Click a highlighted country" in result
+        assert "Use the country buttons below to drill down" in result
 
     def test_monitoring_badge(self) -> None:
         """Global summary shows MONITORING badge."""

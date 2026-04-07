@@ -158,7 +158,7 @@ data/
 ## Testing
 
 ```bash
-python -m pytest tests/ -q     # 693 tests across 25 test files
+python -m pytest tests/ -q     # 695 tests across 25 test files
 ```
 
 ## Configuration

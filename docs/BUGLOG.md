@@ -707,8 +707,8 @@ India drill-down "Webcams" tab shows Chennai webcam as "This video is unavailabl
 
 ## Test Suite Status
 
-- **569 tests passing** across 23 test files, 0 failures, 0 errors, 0 skipped
-- **CLAUDE.md says 502 tests / 22 files** — stale (see M20)
+- **695 tests passing** across 25 test files, 0 failures, 0 errors, 0 skipped
+- Test count updated in CLAUDE.md and README.md (CE9 fix)
 - **Coverage gaps:** `scripts/prepare_geojson.py` (no tests), `config/regions.yaml` (no dedicated validation), no `pytest-cov` line coverage measurement
 - All src/, dashboard/components/, scripts/ modules have corresponding test files except `prepare_geojson.py`
 - Static HTML templates tested indirectly through component tests
@@ -727,3 +727,117 @@ The codebase has strong security foundations for a research prototype:
 - **Path traversal:** All paths from `Path(__file__).resolve()` anchors. No user input in file paths.
 - **Open redirect:** `_safe_url()` validates scheme and blocks private hosts.
 - **Dependencies:** `requirements.txt` pins specific versions. No known CVEs at audit date.
+
+---
+
+## Codex Multi-Agent Re-Evaluation — 2026-04-07
+
+> **Audit method:** Read all `docs/plans` first, then ran a four-agent read-only audit with cross-checking. Local checks: `python -m pytest -q` passed with 693 tests; clean init loaded 60 active feeds; temp seed smoke loaded 79/79 articles; `py_compile` passed; `python -m src.ingestion --once` exited 0 with no work. No live browser/RSS/YouTube checks were run.
+
+### Open Findings
+
+#### CE1. Threshold enforcement still conflicts with plan
+
+- **Severity:** HIGH
+- **Files:** `src/classifier.py:382-384`, `src/ingestion.py:255-262`, `tests/test_classifier.py:196-215`
+- **Category:** Plan compliance / classification cost bug
+
+The design requires flagging/summarization only when `confidence >= 0.6`. Current classifier preserves raw LLM `is_surveillance=True` regardless of confidence, and ingestion summarizes on that raw flag. Tests currently encode this raw-preservation behavior.
+
+> **Status:** OPEN.
+
+---
+
+#### CE2. Globe click-to-drilldown is not implemented
+
+- **Severity:** HIGH
+- **Files:** `dashboard/static/globe_component/index.html:247`, `dashboard/app.py:403-408`, `dashboard/components/analysis.py:237-238`
+- **Category:** Dashboard interaction / plan compliance
+
+The April 7 command-center redesign requires clicking focus countries on the globe. Active JS explicitly has no polygon `onClick`, and the app ignores the `render_globe()` return value. Streamlit drill-down buttons work, but they do not satisfy the approved globe-click behavior and make the "Click a highlighted country" UI copy inaccurate.
+
+> **Status:** OPEN.
+
+---
+
+#### CE3. First classification failure becomes terminal
+
+- **Severity:** HIGH / MEDIUM
+- **Files:** `src/ingestion.py:65-76`, `src/database.py:243-256`, `src/classifier.py:367-372`
+- **Category:** Retry semantics
+
+The current `llm_provider="failed"` sentinel prevents infinite reclassification loops, but it also prevents retrying transient malformed/empty LLM responses after a single failure. This likely overshoots the intended circuit breaker behavior.
+
+> **Status:** OPEN.
+
+---
+
+#### CE4. Global globe hides non-focus countries
+
+- **Severity:** MEDIUM
+- **Files:** `dashboard/app.py:387-396`, `dashboard/components/analysis.py:192-240`
+- **Category:** Dashboard data scope / plan compliance
+
+The April 7 plan says global view should show all article dots while only four focus countries are clickable. Current code filters `all_counts` down to `DRILL_DOWN_COUNTRIES`, so non-focus seed countries such as CN, RU, IL, TR, ET, MM, IR, RS, and KE disappear from the globe and global summary.
+
+> **Status:** OPEN.
+
+---
+
+#### CE5. Sidebar country filter is misleading in global view
+
+- **Severity:** MEDIUM
+- **Files:** `dashboard/app.py:134-151`, `dashboard/app.py:449-454`
+- **Category:** Dashboard filtering
+
+The sidebar can emit a `country_code`, but global mode strips that key and forces `country_codes=list(DRILL_DOWN_COUNTRIES)`. If this is intentional, the UI should make clear that the global feed is focus-country scoped.
+
+> **Status:** OPEN / CLARIFY INTENT.
+
+---
+
+#### CE6. Live media layer remains brittle
+
+- **Severity:** MEDIUM
+- **Files:** `config/streams.yaml:2-4`, `config/streams.yaml:25-29`, `src/stream_resolver.py:170-174`, `src/stream_resolver.py:221-225`, `dashboard/app.py:433-434`, `config/webcams.yaml:5-98`
+- **Category:** Demo reliability / external resources
+
+Current stream config uses direct YouTube video IDs that may rotate, while the resolver skips direct embeds and therefore does not self-heal them. Fallback streams are configured but not automatically used by the dashboard render path. South Africa uses `africanews` rather than the planned eNCA source. Webcam coverage is mostly `news_fallback` or empty slots: 12 slots total, 3 actual webcams, 9 news fallbacks, 3 empty embeds.
+
+> **Status:** OPEN. Requires live browser/network verification to confirm current embed liveness.
+
+---
+
+#### CE7. GDELT enrichment is absent
+
+- **Severity:** MEDIUM
+- **Files:** `docs/plans/2026-04-07-command-center-redesign.md:50`
+- **Category:** Missing planned feature
+
+The April 7 plan requires GDELT supplementation when article coverage is thin. No implementation exists outside the plan reference.
+
+> **Status:** OPEN.
+
+---
+
+#### CE8. Planned `src.ingestion` module CLI remains a no-op
+
+- **Severity:** MEDIUM / LOW
+- **Files:** `src/ingestion.py`, `scripts/run_ingestion.py:133-160`
+- **Category:** Plan/API mismatch
+
+The implementation plan references `run_scheduled(interval_minutes=30)` and `python -m src.ingestion --once`, but `src.ingestion` has no module entrypoint or `run_scheduled()` method. The real supported CLI is `scripts/run_ingestion.py`.
+
+> **Status: FIXED.** Updated design doc quick-start command from `python -m src.ingestion` to `python scripts/run_ingestion.py`. CLAUDE.md and README.md already reference `scripts/run_ingestion.py` correctly. Implementation plan references left as historical record.
+
+---
+
+#### CE9. Seed and documentation cleanup
+
+- **Severity:** LOW
+- **Files:** `scripts/seed_data.py:63-64`, `README.md:255`, `README.md:297`, `CLAUDE.md:117-126`, `requirements.txt:1-9`
+- **Category:** Reproducibility / stale docs
+
+Seed `fetched_at` uses load time rather than `published_at`; impact is low because queries use `published_at`. README/CLAUDE still report 610 tests while the suite has 693. README/BUGLOG overstate dynamic channel-based stream resolution while the current configs use direct video IDs. `requirements.txt` omits plan-listed `pydeck` and `schedule`, probably acceptable if those dependencies remain intentionally unused.
+
+> **Status: FIXED.** Updated test counts in CLAUDE.md (695/25), README.md (695/25), and BUGLOG.md. `pydeck` and `schedule` intentionally omitted from requirements.txt (globe uses raw deck.gl JS, scheduling uses time.sleep loop). Seed `fetched_at` accepted as-is (low impact).

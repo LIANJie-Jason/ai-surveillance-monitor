@@ -62,6 +62,7 @@ class Article:
     summary_en: Optional[str] = None
     classified_at: Optional[datetime] = None
     llm_provider: Optional[str] = None
+    classify_attempts: int = 0
 
     @classmethod
     def _canonicalize_url(cls, url: str) -> str:

@@ -97,7 +97,7 @@
           const props = info.object.properties;
           const name = props.NAME || props.ADMIN || 'Unknown';
           const iso2 = props.iso2 || props.ISO_A2 || '';
-          const hint = focusSet.has(iso2) ? ' (click to drill down)' : '';
+          const hint = focusSet.has(iso2) ? ' (focus country)' : '';
           showTooltip(info.x, info.y, name + hint, '');
         } else {
           hideTooltip();

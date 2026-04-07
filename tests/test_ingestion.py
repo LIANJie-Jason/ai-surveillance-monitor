@@ -265,6 +265,59 @@ def test_process_batch_classifies_and_summarizes():
     assert len(mock_db.upsert_articles_batch.call_args[0][0]) == 2
 
 
+def test_process_batch_summarizes_at_exact_threshold():
+    """Articles with confidence exactly 0.6 SHOULD be summarized (>= boundary)."""
+    from src.ingestion import IngestionWorker
+
+    mock_db = MagicMock()
+    mock_classifier = MagicMock()
+    mock_summarizer = MagicMock()
+
+    mock_classifier.classify_batch.return_value = [
+        ClassificationResult(
+            is_surveillance=True, confidence=0.6, category="surveillance",
+            country_code="IN", country_name="India", llm_provider="openai",
+        ),
+    ]
+    mock_summarizer.summarize.return_value = ("Summary.", "Title")
+
+    worker = IngestionWorker(db=mock_db, classifier=mock_classifier, summarizer=mock_summarizer)
+    worker.process_batch([_make_article("1")])
+
+    mock_summarizer.summarize.assert_called_once()
+
+
+def test_process_batch_skips_summarization_below_threshold():
+    """Articles with is_surveillance=True but confidence < 0.6 should NOT be summarized."""
+    from src.ingestion import IngestionWorker
+
+    mock_db = MagicMock()
+    mock_classifier = MagicMock()
+    mock_summarizer = MagicMock()
+
+    mock_classifier.classify_batch.return_value = [
+        ClassificationResult(
+            is_surveillance=True, confidence=0.59, category="surveillance",
+            country_code="IN", country_name="India", llm_provider="openai",
+        ),
+        ClassificationResult(
+            is_surveillance=True, confidence=None, category="surveillance",
+            country_code="IN", country_name="India", llm_provider="openai",
+        ),
+    ]
+
+    worker = IngestionWorker(db=mock_db, classifier=mock_classifier, summarizer=mock_summarizer)
+    articles = [_make_article("1", "Low confidence"), _make_article("2", "No confidence")]
+
+    worker.process_batch(articles)
+
+    # Summarizer should NOT be called — both below threshold
+    mock_summarizer.summarize.assert_not_called()
+    # But articles are still upserted with classification data
+    mock_db.upsert_articles_batch.assert_called_once()
+    assert len(mock_db.upsert_articles_batch.call_args[0][0]) == 2
+
+
 def test_process_batch_empty_list():
     """Empty batch should not call classifier or summarizer."""
     from src.ingestion import IngestionWorker

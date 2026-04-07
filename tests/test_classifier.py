@@ -143,7 +143,7 @@ def test_classify_batch_missing_and_out_of_order_indexes():
     assert results[1].is_surveillance is False
     assert results[1].confidence is None
     assert results[1].category == "other"
-    assert results[1].llm_provider == "failed"
+    assert results[1].llm_provider == "retry"
     # Index 2: returned by LLM (out of order)
     assert results[2].is_surveillance is True
     assert results[2].country_code == "NG"
@@ -151,11 +151,11 @@ def test_classify_batch_missing_and_out_of_order_indexes():
 
 def test_default_provider_consistency_between_ingestion_and_classifier():
     """R6: Both ingestion._default_result and classifier missing-index should
-    use the same llm_provider value ('failed') for failed classifications."""
+    use the same llm_provider value ('retry') for failed classifications."""
     from src.ingestion import _default_result
 
     ingestion_default = _default_result()
-    assert ingestion_default.llm_provider == "failed"
+    assert ingestion_default.llm_provider == "retry"
 
     # Classifier path: simulate missing index via _parse_response
     mock_client = MagicMock()
@@ -165,7 +165,7 @@ def test_default_provider_consistency_between_ingestion_and_classifier():
         '{"articles": []}', "openai", 1
     )
     assert len(results) == 1
-    assert results[0].llm_provider == "failed"
+    assert results[0].llm_provider == "retry"
 
     # Both must match
     assert ingestion_default.llm_provider == results[0].llm_provider
@@ -287,7 +287,7 @@ def test_classify_batch_boolean_index_rejected():
     # True should be rejected — article gets default values
     assert results[0].is_surveillance is False
     assert results[0].confidence is None
-    assert results[0].llm_provider == "failed"
+    assert results[0].llm_provider == "retry"
 
 
 def test_classify_batch_non_string_country_name():
@@ -383,10 +383,10 @@ def test_classify_batch_non_finite_index_rejected():
     assert len(results) == 2
     assert results[0].is_surveillance is False
     assert results[0].confidence is None
-    assert results[0].llm_provider == "failed"
+    assert results[0].llm_provider == "retry"
     assert results[1].is_surveillance is False
     assert results[1].confidence is None
-    assert results[1].llm_provider == "failed"
+    assert results[1].llm_provider == "retry"
 
 
 def test_sanitize_text_escapes_delimiters():

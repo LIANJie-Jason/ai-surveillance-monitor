@@ -14,12 +14,20 @@ The monitor continuously scans news from wire services, major outlets, digital r
 
 ### Dashboard at a Glance
 
-| Global View | Country Drill-Down |
-|---|---|
-| 3D rotating globe with focus country highlighting | Country analysis panel with category bars, confidence stats, key themes |
-| Global summary with article counts per country | Embedded live news stream (YouTube) |
-| Drill-down country buttons | City webcam grid |
-| Horizontal scrollable news card feed | AI-summarized article detail with original page embed |
+#### Global View
+3D rotating globe with focus country highlighting, global summary, drill-down buttons, and scrollable news card feed.
+
+![Global View](graphs/global.png)
+
+#### Country Drill-Down
+Country analysis panel with category distribution, confidence stats, key themes, and embedded live news stream.
+
+![Country Drill-Down — India](graphs/country%20view.png)
+
+#### Article Detail
+News feed with AI-generated summaries, metadata, and embedded original article view.
+
+![Article Detail & Feed](graphs/country%20feed.png)
 
 ## Quick Start
 

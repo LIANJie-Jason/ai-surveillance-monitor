@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "AI Surveillance & Censorship News Monitor"
+authors:
+  - family-names: Lian
+    given-names: Jie
+    orcid: "https://orcid.org/0009-0001-7344-7324"
+    affiliation: "Harvard Kennedy School"
+url: "https://github.com/LIANJie-Jason/ai-surveillance-monitor"
+repository-code: "https://github.com/LIANJie-Jason/ai-surveillance-monitor"
+abstract: >-
+  A real-time command center that tracks global surveillance and censorship
+  using AI-powered news analysis. Ingests RSS feeds from 64 sources,
+  classifies articles with LLMs, and renders a live dashboard with a 3D
+  rotating globe, country-level drill-downs, embedded news streams, and
+  AI-generated article summaries.
+keywords:
+  - surveillance
+  - censorship
+  - computational repression
+  - news monitoring
+  - natural language processing
+  - political science
+license: MIT
+date-released: "2026-04-07"

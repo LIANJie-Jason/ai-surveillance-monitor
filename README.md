@@ -177,6 +177,22 @@ python -m pytest tests/ -q     # 693 tests across 25 test files
 - `docs/plans/2026-03-31-surveillance-monitor-implementation.md` — implementation plan
 - `docs/cowork_log.md` — session-by-session build log
 
+## Citation
+
+If you use this software in your research, please cite:
+
+```bibtex
+@software{lian2026surveillance,
+  author       = {Lian, Jie},
+  title        = {{AI Surveillance \& Censorship News Monitor}},
+  year         = {2026},
+  url          = {https://github.com/LIANJie-Jason/ai-surveillance-monitor},
+  note         = {Research prototype for NSF grant demonstration}
+}
+```
+
+GitHub also provides a "Cite this repository" button via the [`CITATION.cff`](CITATION.cff) file.
+
 ## License
 
 Research prototype. Built for NSF grant demonstration purposes.

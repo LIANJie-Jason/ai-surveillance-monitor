@@ -1066,3 +1066,105 @@ Each agent read the plans first, inspected code, then cross-checked the consolid
 - Feed taxonomy is cleaner via `Feed.feed_type`; config has 64 feeds, 60 active.
 - Admin-1 GeoJSON files and globe overlay plumbing exist for `IN/MY/NG/ZA`.
 - Seed JSON loads idempotently and has no missing URLs or summaries.
+
+---
+
+## Session 4 — 2026-04-07 (continued)
+
+### Phase: Bug Fix Cycle — Codex Re-Evaluation Findings
+
+Fixed 6 of 9 open Codex re-evaluation findings (CE1–CE9), each Codex-audited before moving to the next. Also fixed a globe animation bug and added dashboard screenshots to README.
+
+### Fixes Applied
+
+**CE1: Threshold enforcement (HIGH → FIXED)**
+- Gate summarization on `confidence >= 0.6` in `ingestion.py:255`
+- Added `_SUMMARIZE_CONFIDENCE_THRESHOLD = 0.6` constant
+- Two new tests: exact boundary (0.6 triggers) and below-threshold (0.59 + None skip)
+- Codex audit: PASS
+
+**CE3: First-failure-terminal retry semantics (HIGH → FIXED)**
+- Added `classify_attempts INTEGER DEFAULT 0` column to articles schema
+- Upsert increments counter on failure (confidence IS NULL), resets to 0 on success
+- `article_needs_classification()` now checks `classify_attempts < 3` instead of `llm_provider != 'failed'`
+- Changed sentinel from `"failed"` to `"retry"` in classifier and ingestion
+- Safe migration for existing DBs (ALTER TABLE with try/except)
+- Defensive `_row_to_article` guard for pre-migration read-only DBs
+- Codex audit: PASS
+
+**CE2: Misleading globe click copy (HIGH → FIXED)**
+- Changed "Click a highlighted country" → "Use the country buttons below to drill down"
+- Updated `map_globe.py` module and function docstrings to say "display-only"
+- Fixed legacy `deck_globe.html` hover tooltip: "(click to drill down)" → "(focus country)"
+- Codex audit: PASS
+
+**CE5: Sidebar country filter misleading (MEDIUM → FIXED)**
+- Changed selectbox label to "Country (focus countries only)"
+- Made filter functional in global view: when a specific country is selected, it now filters the global feed to that country instead of silently ignoring it
+- Codex audit: PASS
+
+**CE9: Stale documentation (LOW → FIXED)**
+- Updated test counts: 610/693 → 695 in CLAUDE.md, README.md, BUGLOG.md
+- Test files: 24 → 25
+- `pydeck`/`schedule` confirmed intentionally absent from requirements.txt
+- Codex audit: PASS
+
+**CE8: Module CLI docs mismatch (MEDIUM/LOW → FIXED)**
+- Updated design doc quick-start from `python -m src.ingestion` to `python scripts/run_ingestion.py`
+- CLAUDE.md and README.md already correct
+- Implementation plan references left as historical record
+- Codex audit: PASS
+
+### Findings Not Fixed (by design)
+
+- **CE4 (globe hides non-focus countries):** Not a bug — 4 focus countries is the intended scope
+- **CE6 (live media brittle):** YouTube embed volatility is inherent; channel-based URLs already applied where possible
+- **CE7 (GDELT enrichment):** Feature request, deferred
+
+### Globe UX Fix
+
+- **Smooth back-transition:** `goBack()` was setting `rotating = true` immediately, causing `animateRotation()` to overwrite the `FlyToInterpolator` transition with `transitionDuration: 0` on every frame. Fixed by delaying rotation resume until after the 1400ms fly-back transition completes.
+
+### Globe Visual Tuning (from earlier in session)
+
+- Brightened country polygon fills: `[20,25,35]` → `[48,56,72]`
+- Brightened borders: `[40,50,65]` → `[75,88,108]`
+- Increased focus country alpha: 80 → 120
+- Increased hover highlight alpha: 40 → 60
+- Two iterative rounds based on user feedback ("a little less dim")
+
+### README Screenshots
+
+Added 3 dashboard screenshots to `graphs/` and embedded in README:
+1. `global.png` — 3D globe with global summary and news cards
+2. `country view.png` — India drill-down with live analysis and NDTV stream
+3. `country feed.png` — Article detail with AI summary and original page embed
+
+### Files Modified (this session)
+
+**Code:**
+- `src/ingestion.py` — summarization threshold, retry sentinel
+- `src/classifier.py` — retry sentinel
+- `src/models.py` — classify_attempts field
+- `src/database.py` — schema, migration, upsert, needs_classification, row hydration
+- `dashboard/app.py` — sidebar label, global view filter logic
+- `dashboard/components/analysis.py` — drill-down hint text
+- `dashboard/components/map_globe.py` — docstrings
+- `dashboard/static/deck_globe.html` — hover tooltip
+- `dashboard/static/globe_component/index.html` — brightness, back-transition
+
+**Tests:**
+- `tests/test_ingestion.py` — +2 threshold tests (27 total)
+- `tests/test_classifier.py` — 6 sentinel assertions updated
+- `tests/test_analysis.py` — drill-down hint assertion updated
+
+**Docs:**
+- `CLAUDE.md`, `README.md`, `docs/BUGLOG.md` — test counts, screenshots
+- `docs/plans/2026-03-31-surveillance-monitor-design.md` — CLI reference
+
+### Current State
+
+- **695 tests passing** across 25 test files
+- **0 CRITICAL, 0 HIGH** open findings
+- **2 MEDIUM** open (CE6 live media, CE7 GDELT — both deferred)
+- All Codex audit findings resolved or explicitly accepted

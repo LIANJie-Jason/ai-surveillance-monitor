@@ -1,11 +1,13 @@
-cff-version: 0.1.2
+cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 title: "AI-powered Surveillance & Censorship Monitor"
+version: v0.1.2
+date-released: "2026-04-07"
 authors:
   - family-names: Lian
     given-names: Jie
-    orcid: "https://orcid.org/0009-0001-7344-7324"
+    orcid: "https://orcid.org/0009-0006-5935-0592"
     affiliation: "Harvard Kennedy School"
 url: "https://github.com/LIANJie-Jason/ai-surveillance-monitor"
 repository-code: "https://github.com/LIANJie-Jason/ai-surveillance-monitor"
@@ -25,4 +27,3 @@ keywords:
   - natural language processing
   - political science
 license: MIT
-date-released: "2026-04-07"
